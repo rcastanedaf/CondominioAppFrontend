@@ -1,0 +1,17 @@
+:root {
+  --cms-sidebar-width: 230px;
+  --cms-sidebar-collapsed: 58px;
+  --cms-topbar-height: 52px;
+  --cms-taskpanel-width: 210px;
+  --cms-primary: #0d6efd;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 3px; }
