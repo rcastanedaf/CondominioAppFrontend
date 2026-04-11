@@ -41,24 +41,7 @@ export default function TipoPropiedadTable({ moduleColor }) {
   return (
     <>
       {/* Header + buscador + selector — reemplaza el antiguo d-flex justify-content-between */}
-            <PaginacionFooter
-              titulo="Tipo Propiedad"
-              icono="bi-bank"
-              labelBoton="Nuevo Tipo Propiedad"
-              onNuevo={() => { setSelected(null); setShowModal(true) }}
-              moduleColor={moduleColor}
-              filtro={filtro}
-              setFiltro={setFiltro}
-              placeholder="Filtrar tipo propiedad..."
-              paginaSegura={paginaSegura}
-              totalPaginas={totalPaginas}
-              porPagina={porPagina}
-              setPorPagina={setPorPagina}
-              irA={irA}
-              paginas={paginas}
-              totalDatos={datosFiltrados.length}
-              label="tipo propiedad"
-            />
+
       <div className="cms-table-wrap">
         <table className="table table-hover cms-table">
           <thead><tr><th>#</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr></thead>
