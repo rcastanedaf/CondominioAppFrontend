@@ -17,7 +17,7 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
 
   useEffect(() => {
     if (propiedad) {
-      setIdTipo(propiedad.idTipoPropiedad ?? '')
+      setIdTipo(propiedad.id_tipo_propiedad ?? '')
       setCodigo(propiedad.codigo ?? '')
       setNivel(propiedad.nivel ?? '')
       setAreaM2(propiedad.areaM2 ?? '')
@@ -38,15 +38,15 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
     setLoading(true); setError(null)
     try {
       const payload = {
-        id: propiedad ? propiedad.id : 0,
-        idTipoPropiedad: Number(idTipoPropiedad) || null,
+        id_propiedad: propiedad ? propiedad.id_propiedad : 0,
+        id_tipo_propiedad: Number(idTipoPropiedad) || null,
         codigo, nivel: Number(nivel) || null,
         areaM2: Number(areaM2) || null,
         numHabitaciones: Number(numHabitaciones) || null,
         numParqueos: Number(numParqueos) || null,
         estado, descripcion,
       }
-      propiedad ? await updatePropiedad(propiedad.id, payload) : await createPropiedad(payload)
+      propiedad ? await updatePropiedad(propiedad.id_propiedad, payload) : await createPropiedad(payload)
       onSaved()
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }
