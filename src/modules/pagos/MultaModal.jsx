@@ -78,7 +78,6 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
       <div className="modal fade show d-block" tabIndex="-1">
         <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content">
-
             <div className="modal-header">
               <h5 className="modal-title">{multa ? '✏️ Editar Multa' : '🚫 Nueva Multa'}</h5>
               <button className="btn-close" onClick={onClose} />

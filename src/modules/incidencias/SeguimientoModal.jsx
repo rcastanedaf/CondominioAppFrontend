@@ -111,7 +111,6 @@ export default function SeguimientoModal({ show, onClose, onSaved, incidenciaId,
                     autoFocus
                   />
                 </div>
-
               </div>
             </div>
 

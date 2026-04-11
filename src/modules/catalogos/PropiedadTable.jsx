@@ -79,12 +79,12 @@ export default function PropiedadTable({ moduleColor }) {
                     <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(row); setShowModal(true) }}>
                       <i className="bi bi-pencil me-1" style={{ fontSize: 11 }} />Editar
                     </button>
-                    {confirmId === row.id ? (
+                    {confirmId === row.id_propiedad ? (
                       <><span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id)}>Sí</button>
+                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id_propiedad)}>Sí</button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button></>
                     ) : (
-                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.id)}>
+                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.id_propiedad)}>
                         <i className="bi bi-trash me-1" style={{ fontSize: 11 }} />Eliminar
                       </button>
                     )}

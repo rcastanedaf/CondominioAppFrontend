@@ -19,8 +19,12 @@ export default function TipoPropiedadModal({ show, onClose, onSaved, tipoPropied
     if (!nombre.trim()) return setError('El nombre es requerido')
     setLoading(true); setError(null)
     try {
-      const payload = { id: tipoPropiedad ? tipoPropiedad.id : 0, nombre, descripcion }
-      tipoPropiedad ? await updateTipoPropiedad(tipoPropiedad.id, payload) : await createTipoPropiedad(payload)
+      const payload = {
+        id_tipo_propiedad: tipoPropiedad ? tipoPropiedad.id_tipo_propiedad : 0,
+        nombre,
+        descripcion
+      }
+      tipoPropiedad ? await updateTipoPropiedad(tipoPropiedad.id_tipo_propiedad, payload) : await createTipoPropiedad(payload)
       onSaved()
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }

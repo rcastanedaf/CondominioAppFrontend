@@ -11,7 +11,6 @@ const fmt = (n) =>
   `Q ${Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
 
 const STATUS_COLOR = {
-  Pendiente: 'warning', Pagada: 'success', Vencida: 'danger', Anulada: 'secondary',
   PENDIENTE: 'warning', PAGADA: 'success', VENCIDA: 'danger', ANULADA: 'secondary',
 }
 

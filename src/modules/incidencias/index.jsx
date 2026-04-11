@@ -84,4 +84,3 @@ export default function IncidenciasModule({ mod, activeSubModule, setActiveSubMo
     </ModuleLayout>
   )
 }
-
