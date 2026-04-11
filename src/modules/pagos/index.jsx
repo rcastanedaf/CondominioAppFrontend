@@ -9,7 +9,7 @@ const CRUD_CARDS = [
   { id: 'pagos',          label: 'Pagos por Residente',  emoji: '💳', desc: 'Historial de pagos por residente',       color: '#0dcaf0' },
   { id: 'cuentas-cobrar', label: 'Cuentas por Cobrar',   emoji: '📋', desc: 'Estado de cuenta y saldo por residente', color: '#fd7e14' },
   { id: 'cobros-mora',    label: 'Cobros de Mora',       emoji: '⚠️', desc: 'Cálculo y gestión de mora',              color: '#dc3545' },
-  { id: 'multas',         label: 'Multas',               emoji: '🚫', desc: 'Infracciones y multas',                  color: '#6f42c1' },
+  { id: 'multa',         label: ' Gestion de Multas',               emoji: '🚫', desc: 'Infracciones y multas',                  color: '#6f42c1' },
   { id: 'acuerdos-pago',  label: 'Acuerdos de Pago',    emoji: '🤝', desc: 'Acuerdos y convenios',                   color: '#198754' },
   { id: 'mora',           label: 'Gestión Mora',         emoji: '📊', desc: 'Reportes de mora',                       color: '#fd7e14' },
 ]
@@ -23,7 +23,7 @@ const SUB_VIEWS = {
   ),
   'cuentas-cobrar': (color) => <CuentaCobrarResidente modColor={color} />,
   'cobros-mora':    (color) => <CobroMoraTable moduleColor={color} />,
-  'multas':         (color) => <MultaTable moduleColor={color} />,
+  'multa':         (color) => <MultaTable moduleColor={color} />,
 }
 
 export default function PagosModule({ mod, activeSubModule, setActiveSubModule }) {
