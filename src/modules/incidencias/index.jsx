@@ -1,6 +1,7 @@
 import { useRef } from 'react'
-import ModuleLayout       from '../../shared/components/ModuleLayout'
-import IncidenciaDetalle  from './IncidenciaDetalle'
+import ModuleLayout            from '../../shared/components/ModuleLayout'
+import IncidenciaDetalle       from './IncidenciaDetalle'
+import CategoriaIncidenciaTable from './CategoriaIncidenciaTable'
 
 export default function IncidenciasModule({ mod, activeSubModule, setActiveSubModule }) {
   const taskHandlersRef = useRef({})
@@ -9,18 +10,29 @@ export default function IncidenciasModule({ mod, activeSubModule, setActiveSubMo
     taskHandlersRef.current[taskName] = fn
   }
 
-    const CRUD_CARDS = [
-    { id: 'incidencias',             label: 'Registro de Incidencias',        emoji: '🏦', desc: 'Gestión de Bancos',               color: '#0d6efd' },
-    { id: 'seguimiento',       label: 'Seguimiento',  emoji: '📉', desc: 'Gestión de Concepto Descuento',   color: '#198754' },
-    { id: 'categoria-incidencia',       label: 'Categoria Incidencias', emoji: '💰', desc: 'Gestión de Metodo de Pago',       color: '#fd7e14' },
+  const CRUD_CARDS = [
+    { id: 'incidencias',         label: 'Registro de Incidencias', emoji: '⚠️',  desc: 'Gestión y seguimiento de incidencias', color: '#dc3545' },
+    { id: 'seguimiento',         label: 'Seguimiento',             emoji: '📋',  desc: 'Historial de seguimiento por incidencia', color: '#fd7e14' },
+    { id: 'categoria-incidencia',label: 'Categoría Incidencias',   emoji: '🏷️',  desc: 'Categorías de incidencias',           color: '#198754' },
   ]
-  
-    const SUB_MODULE_VIEWS = {
-      'incidencias':              (moduleColor) => <IncidenciaDetalle moduleColor={moduleColor} />,
-      'seguimiento': (color) => <IncidenciaDetalle moduleColor={color} />,
-      'categoria-incidencia':        (color) => <IncidenciaDetalle moduleColor={color} />,
-    }
-    const renderSubModule = SUB_MODULE_VIEWS[activeSubModule]
+
+  const SUB_MODULE_VIEWS = {
+    'incidencias':          (color) => (
+      <IncidenciaDetalle
+        modColor={color}
+        onRegisterTaskHandler={(name, fn) => { taskHandlersRef.current[name] = fn }}
+      />
+    ),
+    'seguimiento':          (color) => (
+      <IncidenciaDetalle
+        modColor={color}
+        onRegisterTaskHandler={(name, fn) => { taskHandlersRef.current[name] = fn }}
+      />
+    ),
+    'categoria-incidencia': (color) => <CategoriaIncidenciaTable moduleColor={color} />,
+  }
+
+  const renderSubModule = SUB_MODULE_VIEWS[activeSubModule]
 
   return (
     <ModuleLayout
@@ -29,7 +41,6 @@ export default function IncidenciasModule({ mod, activeSubModule, setActiveSubMo
       setActiveSubModule={setActiveSubModule}
       onNew={() => taskHandlersRef.current['Nueva incidencia']?.()}
     >
-      {/* Pestaña General → tarjetas */}
       {!activeSubModule && (
         <div className="row g-3 mt-1">
           {CRUD_CARDS.map(card => (
@@ -60,7 +71,6 @@ export default function IncidenciasModule({ mod, activeSubModule, setActiveSubMo
         </div>
       )}
 
-      {/* Sub-módulo activo → vista correspondiente */}
       {activeSubModule && (
         renderSubModule
           ? renderSubModule(mod?.color)

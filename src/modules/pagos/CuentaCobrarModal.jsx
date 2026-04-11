@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { createCuentaCobrar, updateCuentaCobrar } from './cuentaCobrarService'
+import FkSelector from '../../components/FkSelector'
+import { getResidentes } from '../residentes/residenteService'
+import { getFacturas } from '../facturacion/facturacionService'
 
 const ESTADOS = ['PENDIENTE', 'PARCIAL', 'PAGADA', 'VENCIDA', 'ANULADA']
 
@@ -12,6 +15,8 @@ export default function CuentaCobrarModal({ show, onClose, onSaved, cuenta }) {
   const [estado,       setEstado]   = useState('PENDIENTE')
   const [loading,      setLoading]  = useState(false)
   const [error,        setError]    = useState(null)
+  const [labelRes,  setLabelRes]  = useState('')
+  const [labelFact, setLabelFact] = useState('')
 
   useEffect(() => {
     if (cuenta) {
@@ -60,12 +65,32 @@ export default function CuentaCobrarModal({ show, onClose, onSaved, cuenta }) {
               {error && <div className="alert alert-danger py-2 mb-3"><i className="bi bi-exclamation-circle me-2" />{error}</div>}
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Residente <span className="text-danger">*</span></label>
-                  <input type="number" className="form-control" value={idResidente} onChange={e => setIdRes(e.target.value)} autoFocus />
+                  <FkSelector
+                    label="Residente" required
+                    fetchFn={getResidentes}
+                    getId={r => r.idResidente ?? r.id}
+                    getLabel={r => r.nombres
+                      ? `${r.nombres} ${r.apellidos ?? ''}`.trim()
+                      : `#${r.idResidente ?? r.id}`}
+                    value={idResidente}
+                    displayValue={labelRes}
+                    onChange={(id, lbl) => { setIdRes(id); setLabelRes(lbl) }}
+                    placeholder="Selecciona residente..."
+                  />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Factura <span className="text-danger">*</span></label>
-                  <input type="number" className="form-control" value={idFactura} onChange={e => setIdFact(e.target.value)} />
+                  <FkSelector
+                    label="Factura" required
+                    fetchFn={getFacturas}
+                    getId={f => f.idFactura ?? f.id}
+                    getLabel={f => f.correlativo ?? f.serie
+                      ? `${f.serie}-${f.numeroFactura}`
+                      : `#${f.idFactura ?? f.id}`}
+                    value={idFactura}
+                    displayValue={labelFact}
+                    onChange={(id, lbl) => { setIdFact(id); setLabelFact(lbl) }}
+                    placeholder="Selecciona factura..."
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Monto Original <span className="text-danger">*</span></label>

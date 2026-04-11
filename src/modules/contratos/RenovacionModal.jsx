@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { createRenovacion, updateRenovacion } from './renovacionService'
+import FkSelector from '../../components/FkSelector'
+import { getContratos } from '../contratos/contratoService'
+import { getTipoMonedas } from '../catalogos/tipoMonedaService'
 
 export default function RenovacionModal({ show, onClose, onSaved, renovacion }) {
   const [idContrato,       setIdContrato]  = useState('')
@@ -9,6 +12,8 @@ export default function RenovacionModal({ show, onClose, onSaved, renovacion }) 
   const [observaciones,    setObs]         = useState('')
   const [loading,          setLoading]     = useState(false)
   const [error,            setError]       = useState(null)
+  const [labelContrato, setLabelContrato] = useState('')
+  const [labelMoneda,   setLabelMoneda]   = useState('')
 
   useEffect(() => {
     if (renovacion) {
@@ -57,8 +62,16 @@ export default function RenovacionModal({ show, onClose, onSaved, renovacion }) 
               {error && <div className="alert alert-danger py-2 mb-3"><i className="bi bi-exclamation-circle me-2" />{error}</div>}
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Contrato <span className="text-danger">*</span></label>
-                  <input type="number" className="form-control" value={idContrato} onChange={e => setIdContrato(e.target.value)} autoFocus />
+                  <FkSelector
+                    label="Contrato" required
+                    fetchFn={getContratos}
+                    getId={c => c.idContrato ?? c.id}
+                    getLabel={c => c.correlativo ?? c.descripcion ?? `#${c.idContrato ?? c.id}`}
+                    value={idContrato}
+                    displayValue={labelContrato}
+                    onChange={(id, lbl) => { setIdContrato(id); setLabelContrato(lbl) }}
+                    placeholder="Selecciona contrato..."
+                  />
                 </div>
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Nueva Vigencia <span className="text-danger">*</span></label>
@@ -72,8 +85,16 @@ export default function RenovacionModal({ show, onClose, onSaved, renovacion }) 
                   </div>
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Moneda (FK)</label>
-                  <input type="number" className="form-control" value={idMoneda} onChange={e => setIdMoneda(e.target.value)} />
+                  <FkSelector
+                    label="Moneda"
+                    fetchFn={getTipoMonedas}
+                    getId={m => m.idTipoMoneda ?? m.id}
+                    getLabel={m => m.nombre ?? m.codigo ?? `#${m.idTipoMoneda ?? m.id}`}
+                    value={idMoneda}
+                    displayValue={labelMoneda}
+                    onChange={(id, lbl) => { setIdMoneda(id); setLabelMoneda(lbl) }}
+                    placeholder="Selecciona moneda..."
+                  />
                 </div>
                 <div className="col-12">
                   <label className="form-label fw-semibold">Observaciones</label>

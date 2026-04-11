@@ -64,7 +64,7 @@ export const MODULES = [
     icon: 'bi-receipt-cutoff',
     color: '#dc3545',
     submodules: [
-      { id: 'facturas', label: 'Facturas' },
+      { id: 'factura', label: 'Facturas' },
       { id: 'ciclo-factura', label: 'Ciclos de Facturación' },
       { id: 'tipo-servicio', label: 'Tipo de Servicio' },
       { id: 'Servicio', label: 'Servicios' },

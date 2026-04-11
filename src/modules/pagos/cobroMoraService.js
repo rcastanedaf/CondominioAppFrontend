@@ -1,6 +1,7 @@
 import axios from 'axios'
-const API_URL = 'https://localhost:44352/CobroMora'
-export const getCobrosMora  = ()         => axios.get(`${API_URL}/get-all-cobro-mora`)
-export const createCobroMora = (data)    => axios.post(`${API_URL}/create-cobro-mora`, data)
-export const updateCobroMora = (id, data)=> axios.put(`${API_URL}/update-cobro-mora/${id}`, data)
-export const deleteCobroMora = (id)      => axios.delete(`${API_URL}/delete-cobro-mora/${id}`)
+const BASE = 'https://localhost:44352/CobroMora'
+
+export const getCobrosMora   = ()     => axios.get(`${BASE}/get-all`)
+export const createCobroMora = (data) => axios.post(`${BASE}/create`, data)
+export const updateCobroMora = (data) => axios.put(`${BASE}/update`, data)   // id va dentro del body
+export const deleteCobroMora = (id)   => axios.delete(`${BASE}/delete/${id}`)

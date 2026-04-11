@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { createCiclo, updateCiclo } from './cicloFacturacionService'
+import FkSelector from '../../components/FkSelector'
+import { getPropiedades } from '../catalogos/propiedadService'
+import { getTipoServicios } from './tipoServicioService'
 
 export default function CicloFacturacionModal({ show, onClose, onSaved, ciclo }) {
   const [idPropiedad,   setIdProp]   = useState('')
@@ -12,6 +15,8 @@ export default function CicloFacturacionModal({ show, onClose, onSaved, ciclo })
   const [fechaFin,      setFechaFin] = useState('')
   const [loading,       setLoading]  = useState(false)
   const [error,         setError]    = useState(null)
+  const [labelProp,  setLabelProp]  = useState('')
+  const [labelServ,  setLabelServ]  = useState('')
 
   useEffect(() => {
     if (ciclo) {
@@ -63,12 +68,28 @@ export default function CicloFacturacionModal({ show, onClose, onSaved, ciclo })
               {error && <div className="alert alert-danger py-2 mb-3"><i className="bi bi-exclamation-circle me-2" />{error}</div>}
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Propiedad <span className="text-danger">*</span></label>
-                  <input type="number" className="form-control" value={idPropiedad} onChange={e => setIdProp(e.target.value)} autoFocus />
+                  <FkSelector
+                    label="Propiedad" required
+                    fetchFn={getPropiedades}
+                    getId={p => p.idPropiedad ?? p.id}
+                    getLabel={p => p.codigo ?? p.nombre ?? `#${p.idPropiedad ?? p.id}`}
+                    value={idPropiedad}
+                    displayValue={labelProp}
+                    onChange={(id, lbl) => { setIdProp(id); setLabelProp(lbl) }}
+                    placeholder="Selecciona propiedad..."
+                  />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Tipo Servicio <span className="text-danger">*</span></label>
-                  <input type="number" className="form-control" value={idTipoServicio} onChange={e => setIdServ(e.target.value)} />
+                  <FkSelector
+                    label="Tipo Servicio" required
+                    fetchFn={getTipoServicios}
+                    getId={s => s.idTipoServicio ?? s.id}
+                    getLabel={s => s.nombre ?? s.descripcion ?? `#${s.idTipoServicio ?? s.id}`}
+                    value={idTipoServicio}
+                    displayValue={labelServ}
+                    onChange={(id, lbl) => { setIdServ(id); setLabelServ(lbl) }}
+                    placeholder="Selecciona servicio..."
+                  />
                 </div>
                 <div className="col-md-3">
                   <label className="form-label fw-semibold">Día Corte <span className="text-danger">*</span></label>

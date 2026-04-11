@@ -20,7 +20,7 @@ export default function TipoPropiedadModal({ show, onClose, onSaved, tipoPropied
     setLoading(true); setError(null)
     try {
       const payload = {
-        id_tipo_propiedad: tipoPropiedad ? tipoPropiedad.id_tipo_propiedad : 0, // 👈 CAMBIO
+        id_tipo_propiedad: tipoPropiedad ? tipoPropiedad.id_tipo_propiedad : 0,
         nombre,
         descripcion
       }

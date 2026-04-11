@@ -1,6 +1,9 @@
 import axios from 'axios'
-const API_URL = 'https://localhost:44352/CicloFacturacion'
-export const getCiclos  = ()         => axios.get(`${API_URL}/get-all-ciclo-facturacion`)
-export const createCiclo = (data)    => axios.post(`${API_URL}/create-ciclo-facturacion`, data)
-export const updateCiclo = (id, data)=> axios.put(`${API_URL}/update-ciclo-facturacion/${id}`, data)
-export const deleteCiclo = (id)      => axios.delete(`${API_URL}/delete-ciclo-facturacion/${id}`)
+const BASE = 'https://localhost:44352/CicloFacturacion'
+
+export const getCiclos            = ()    => axios.get(`${BASE}/get-all`)
+export const getCicloById         = (id)  => axios.get(`${BASE}/get-by-id/${id}`)
+export const getCiclosByPropiedad = (id)  => axios.get(`${BASE}/get-by-propiedad/${id}`)
+export const createCiclo          = (data)=> axios.post(`${BASE}/create`, data)
+export const updateCiclo          = (data)=> axios.put(`${BASE}/update`, data)   // id va dentro del body
+export const deleteCiclo          = (id)  => axios.delete(`${BASE}/delete/${id}`)

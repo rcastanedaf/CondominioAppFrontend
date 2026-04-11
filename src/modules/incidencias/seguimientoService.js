@@ -1,10 +1,9 @@
 import axios from 'axios'
+const BASE = 'https://localhost:44352/SeguimientoIncidencia'
 
-const BASE = 'https://localhost:44352'
-
-export const getSeguimientoByIncidencia = (idIncidencia) =>
-  axios.get(`${BASE}/SeguimientoIncidencia/get-by-incidencia-seguimiento/${idIncidencia}`)
-
-export const createSeguimiento = (data)     => axios.post(`${BASE}/SeguimientoIncidencia/create-seguimiento`, data)
-export const updateSeguimiento = (id, data) => axios.put(`${BASE}/SeguimientoIncidencia/update-seguimiento/${id}`, data)
-export const deleteSeguimiento = (id)       => axios.delete(`${BASE}/SeguimientoIncidencia/delete-seguimiento/${id}`)
+// No existe get-by-incidencia en el backend — se filtra en el componente
+export const getallSeguimientos   = ()     => axios.get(`${BASE}/get-by-incidencia`)
+export const createSeguimiento = (data) => axios.post(`${BASE}/create`, data)
+export const updateSeguimiento = (id, data) => axios.put(`${BASE}/update/${id}`, data)
+export const deleteSeguimiento = (id)   => axios.delete(`${BASE}/delete/${id}`)
+export const getSeguimientos = (idIncidencia) => axios.get(`${BASE}/get-by-incidencia`, { params: { idIncidencia } })
