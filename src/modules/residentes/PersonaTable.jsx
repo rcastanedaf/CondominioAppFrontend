@@ -23,15 +23,21 @@ export default function PersonaTable({ moduleColor }) {
     getPersonas()
       .then(res => {
         const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+        console.log('primer registro raw:', lista[0]) 
         const normalized = lista.map(p => ({
-          id:               p.id_Persona          ?? p.Id_Persona          ?? p.idPersona,
-          tipo:             p.tipo_Persona         ?? p.Tipo_Persona         ?? p.tipopersona        ?? p.tipo,
-          nombres:          p.nombres              ?? p.Nombres,
-          apellidos:        p.apellidos            ?? p.Apellidos,
-          dpi:              p.dpi                  ?? p.DPI,
-          telefonoPrincipal:p.telefono_Principal   ?? p.Telefono_Principal   ?? p.telefonoPrincipal,
-          email:            p.email                ?? p.Email,
-          activo:           p.activo               ?? p.Activo,
+          id:                  p.id_Persona          ?? p.Id_Persona          ?? p.idPersona,
+          tipo:                p.tipo_Persona         ?? p.Tipo_Persona         ?? p.tipopersona ?? p.tipo ?? p.Tipo,
+          nombres:             p.nombres              ?? p.Nombres,
+          apellidos:           p.apellidos            ?? p.Apellidos,
+          dpi:                 p.dpi                  ?? p.DPI,
+          pasaporte:           p.pasaporte            ?? p.Pasaporte            ?? '',
+          fechaNacimiento:     p.fecha_Nacimiento     ?? p.Fecha_Nacimiento     ?? p.fechaNacimiento ?? '',
+          telefonoPrincipal:   p.telefono_Principal   ?? p.Telefono_Principal   ?? p.telefonoPrincipal ?? '',
+          telefonoSecundario:  p.telefono_Secundario  ?? p.Telefono_Secundario  ?? p.telefonoSecundario ?? '',
+          email:               p.email                ?? p.Email                ?? '',
+          nit:                 p.nit                  ?? p.NIT                  ?? '',
+          observaciones:       p.observaciones        ?? p.Observaciones        ?? '',
+          activo:              p.activo               ?? p.Activo               ?? 1,
         }))
         setRows(normalized)
       })

@@ -34,7 +34,7 @@ export default function ResidenteTable({ moduleColor }) {
         const enriched = listaResidentes.map(r => {
           const persona = listaPersonas.find(
             p => (p.id_Persona ?? p.Id_Persona ?? p.idPersona) ===
-                 (r.id_Persona ?? r.Id_Persona ?? r.idPersona)
+                (r.id_Persona ?? r.Id_Persona ?? r.idPersona)
           )
           return {
             id:            r.id_Residente   ?? r.Id_Residente   ?? r.idResidente,

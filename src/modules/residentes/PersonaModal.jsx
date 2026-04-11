@@ -4,20 +4,20 @@ import { createPersona, updatePersona } from './personaService'
 const TIPOS = ['PROPIETARIO', 'RESIDENTE', 'ARRENDATARIO', 'FAMILIAR', 'EMPLEADO', 'OTRO']
 
 export default function PersonaModal({ show, onClose, onSaved, persona }) {
-  const [tipo,        setTipo]        = useState('RESIDENTE')
-  const [nombres,     setNombres]     = useState('')
-  const [apellidos,   setApellidos]   = useState('')
-  const [dpi,         setDpi]         = useState('')
-  const [pasaporte,   setPasaporte]   = useState('')
-  const [fechaNac,    setFechaNac]    = useState('')
-  const [telefPpal,   setTelefPpal]   = useState('')
-  const [telefSec,    setTelefSec]    = useState('')
-  const [email,       setEmail]       = useState('')
-  const [nit,         setNit]         = useState('')
-  const [activo,      setActivo]      = useState(1)
-  const [observaciones, setObs]       = useState('')
-  const [loading,     setLoading]     = useState(false)
-  const [error,       setError]       = useState(null)
+  const [tipo,          setTipo]        = useState('RESIDENTE')
+  const [nombres,       setNombres]     = useState('')
+  const [apellidos,     setApellidos]   = useState('')
+  const [dpi,           setDpi]         = useState('')
+  const [pasaporte,     setPasaporte]   = useState('')
+  const [fechaNac,      setFechaNac]    = useState('')
+  const [telefPpal,     setTelefPpal]   = useState('')
+  const [telefSec,      setTelefSec]    = useState('')
+  const [email,         setEmail]       = useState('')
+  const [nit,           setNit]         = useState('')
+  const [activo,        setActivo]      = useState(1)
+  const [observaciones, setObs]         = useState('')
+  const [loading,       setLoading]     = useState(false)
+  const [error,         setError]       = useState(null)
 
   useEffect(() => {
     if (persona) {
@@ -42,23 +42,64 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
   }, [persona, show])
 
   const handleSubmit = async () => {
-    if (!nombres.trim())   return setError('El nombre es requerido')
-    if (!apellidos.trim()) return setError('Los apellidos son requeridos')
-    if (!tipo)             return setError('El tipo es requerido')
-    setLoading(true); setError(null)
-    try {
+  if (!nombres.trim())   return setError('El nombre es requerido')
+  if (!apellidos.trim()) return setError('Los apellidos son requeridos')
+  if (!tipo)             return setError('El tipo es requerido')
+  if (!fechaNac)         return setError('La fecha de nacimiento es requerida')
+
+  setLoading(true); setError(null)
+  const hoy = new Date().toISOString().substring(0, 10)
+
+  try {
+    if (persona) {
       const payload = {
-        id: persona ? persona.id : 0,
-        tipo, nombres, apellidos, dpi, pasaporte,
-        fechaNacimiento: fechaNac || null,
-        telefonoPrincipal: telefPpal, telefonoSecundario: telefSec,
-        email, nit, activo: Number(activo), observaciones,
+        Id_Persona:          persona.id,  // ✅ usa persona.id que es el campo normalizado
+        Tipo:                tipo,
+        Nombres:             nombres,
+        Apellidos:           apellidos,
+        DPI:                 dpi || '',
+        Pasaporte:           pasaporte || '',
+        Fecha_Nacimiento:    fechaNac,
+        Id_Estado_Civil:     1,
+        Nacionalidad:        1,
+        Telefono_Principal:  telefPpal || '',
+        Telefono_Secundario: telefSec  || '',
+        Email:               email     || '',
+        NIT:                 nit       || '',
+        Id_Regimen_Fiscal:   1,
+        Observaciones:       observaciones || '',
+        Activo:              Number(activo),
+        Fecha_Registro:      hoy,
       }
-      persona ? await updatePersona(persona.id, payload) : await createPersona(payload)
-      onSaved()
-    } catch (err) { setError(err.message) }
-    finally { setLoading(false) }
+      await updatePersona(persona.id, payload)  // ✅ usa persona.id
+      } else {
+      const payload = {
+        Tipo:                tipo,
+        Nombres:             nombres,
+        Apellidos:           apellidos,
+        DPI:                 dpi || '',
+        Pasaporte:           pasaporte || '',
+        Fecha_Nacimiento:    fechaNac,
+        Id_Estado_Civil:     1,
+        Nacionalidad:        1,
+        Telefono_Principal:  telefPpal || '',
+        Telefono_Secundario: telefSec  || '',
+        Email:               email     || '',
+        NIT:                 nit       || '',
+        Id_Regimen_Fiscal:   1,
+        Observaciones:       observaciones || '',
+        Activo:              Number(activo),
+        Fecha_Registro:      hoy,
+      }
+      await createPersona(payload)
+    }
+    onSaved()
+  } catch (err) {
+    setError(err.response?.data?.message ?? err.message)
+  } finally {
+    setLoading(false)
   }
+}
 
   if (!show) return null
   return (
@@ -97,7 +138,7 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
                   <input className="form-control" value={pasaporte} onChange={e => setPasaporte(e.target.value)} />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Fecha Nacimiento</label>
+                  <label className="form-label fw-semibold">Fecha Nacimiento <span className="text-danger">*</span></label>
                   <input type="date" className="form-control" value={fechaNac} onChange={e => setFechaNac(e.target.value)} />
                 </div>
                 <div className="col-md-4">
@@ -132,7 +173,9 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
             <div className="modal-footer">
               <button className="btn btn-outline-secondary" onClick={onClose} disabled={loading}>Cancelar</button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-                {loading ? <><span className="spinner-border spinner-border-sm me-2" />Guardando...</> : persona ? 'Guardar cambios' : 'Crear'}
+                {loading
+                  ? <><span className="spinner-border spinner-border-sm me-2" />Guardando...</>
+                  : persona ? 'Guardar cambios' : 'Crear'}
               </button>
             </div>
           </div>
