@@ -33,7 +33,7 @@ export default function TipoMonedaModal({ show, onClose, onSaved, tipoMoneda }) 
       const payload = {
         id: tipoMoneda ? tipoMoneda.id : 0,
         codigo, nombre, simbolo,
-        tipo_cambio_gtq: Number(tipoCambioGtq),
+        tipo_cambio_gtq: tipoCambioGtq.toString(),
         activo: Number(activo)
       }
       tipoMoneda

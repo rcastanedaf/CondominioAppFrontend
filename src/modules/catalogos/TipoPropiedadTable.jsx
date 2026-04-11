@@ -64,8 +64,8 @@ export default function TipoPropiedadTable({ moduleColor }) {
           <thead><tr><th>#</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr></thead>
           <tbody>
             {datosPagina.map((row, i) => (
-              <tr key={row.id ?? i}>
-                <td className="text-muted">{row.id}</td>
+              <tr key={row.id_tipo_propiedad ?? i}>
+                <td className="text-muted">{row.id_tipo_propiedad}</td>
                 <td>{row.nombre}</td>
                 <td className="text-muted" style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.descripcion}</td>
                 <td>
@@ -73,12 +73,12 @@ export default function TipoPropiedadTable({ moduleColor }) {
                     <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(row); setShowModal(true) }}>
                       <i className="bi bi-pencil me-1" style={{ fontSize: 11 }} />Editar
                     </button>
-                    {confirmId === row.id ? (
+                    {confirmId === row.id_tipo_propiedad ? (
                       <><span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id)}>Sí</button>
+                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id_tipo_propiedad)}>Sí</button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button></>
                     ) : (
-                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.id)}>
+                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.id_tipo_propiedad)}>
                         <i className="bi bi-trash me-1" style={{ fontSize: 11 }} />Eliminar
                       </button>
                     )}
