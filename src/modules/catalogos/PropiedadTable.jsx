@@ -66,13 +66,13 @@ export default function PropiedadTable({ moduleColor }) {
           <thead><tr><th>#</th><th>Código</th><th>Nivel</th><th>Área m²</th><th>Hab.</th><th>Parqueos</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody>
             {datosPagina.map((row, i) => (
-              <tr key={row.id ?? i}>
-                <td className="text-muted">{row.id}</td>
+              <tr key={row.id_propiedad ?? i}>
+                <td className="text-muted">{row.id_propiedad}</td>
                 <td className="fw-semibold">{row.codigo}</td>
                 <td>{row.nivel}</td>
-                <td>{row.areaM2}</td>
-                <td>{row.numHabitaciones}</td>
-                <td>{row.numParqueos}</td>
+                <td>{row.area_m2}</td>
+                <td>{row.num_habitaciones}</td>
+                <td>{row.num_parqueos}</td>
                 <td><span className={`badge text-bg-${ESTADO_COLOR[row.estado] || 'secondary'}`}>{row.estado}</span></td>
                 <td>
                   <div className="d-flex gap-1">

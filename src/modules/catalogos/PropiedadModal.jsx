@@ -21,12 +21,12 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
 
   useEffect(() => {
     if (propiedad) {
-      setIdTipo(propiedad.idTipoPropiedad ?? '')
+      setIdTipo(propiedad.id_tipo_propiedad ?? '')
       setCodigo(propiedad.codigo ?? '')
       setNivel(propiedad.nivel ?? '')
-      setAreaM2(propiedad.areaM2 ?? '')
-      setNumHab(propiedad.numHabitaciones ?? '')
-      setNumParq(propiedad.numParqueos ?? '')
+      setAreaM2(propiedad.area_m2 ?? '')
+      setNumHab(propiedad.num_habitaciones ?? '')
+      setNumParq(propiedad.num_parqueos ?? '')
       setEstado(propiedad.estado ?? 'DISPONIBLE')
       setDescripcion(propiedad.descripcion ?? '')
       setLabelTipo('')
@@ -45,11 +45,11 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
     try {
       const payload = {
         id: propiedad ? propiedad.id : 0,
-        idTipoPropiedad: Number(idTipoPropiedad) || null,
+        id_tipo_propiedad: Number(idTipoPropiedad) || null,
         codigo, nivel: Number(nivel) || null,
-        areaM2: Number(areaM2) || null,
-        numHabitaciones: Number(numHabitaciones) || null,
-        numParqueos: Number(numParqueos) || null,
+        area_m2: Number(areaM2) || null,
+        num_habitaciones: Number(numHabitaciones) || null,
+        num_parqueos: Number(numParqueos) || null,
         estado, descripcion,
       }
       propiedad ? await updatePropiedad(propiedad.id, payload) : await createPropiedad(payload)
@@ -76,8 +76,8 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
                   <FkSelector
                     label="Tipo Propiedad"
                     fetchFn={getTipoPropiedades}
-                    getId={t => t.idTipoPropiedad ?? t.id}
-                    getLabel={t => t.nombre ?? t.descripcion ?? `#${t.idTipoPropiedad ?? t.id}`}
+                    getId={t => t.id_tipo_propiedad ?? t.id}
+                    getLabel={t => t.nombre ?? t.descripcion ?? `#${t.id_tipo_propiedad ?? t.id}`}
                     value={idTipoPropiedad}
                     displayValue={labelTipo}
                     onChange={(id, lbl) => { setIdTipo(id); setLabelTipo(lbl) }}
