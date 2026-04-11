@@ -44,33 +44,38 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
   }, [multa, show])
 
   const handleSubmit = async () => {
-    if (!idResidente)        return setError('El residente es requerido')
-    if (!descripcion.trim()) return setError('La descripción es requerida')
-    if (!monto)              return setError('El monto es requerido')
-    if (!fechaInfraccion)    return setError('La fecha de infracción es requerida')
-    setLoading(true); setError(null)
-    try {
-      debugger
-      const payload = {
-        id_Multa:               multa ? multa.id_Multa :  undefined,
-        id_Residente:      Number(idResidente),
-        id_Propiedad:      Number(idPropiedad) || null,
-        descripcion,
-        monto:            Number(monto),
-        fecha_Infraccion : fechaInfraccion,
-        fecha_Vencimiento: fechaVencimiento || null,
-        estado,
-        evidencia:    evidenciaUrl || null,
-        observaciones,
-      }
-      multa ? await updateMulta(multa.id_Multa, payload) : await createMulta(payload)
-      onSaved()
-    } catch (err) {
-      setError(err.response?.data?.message ?? err.message)
-    } finally {
-      setLoading(false)
+  if (!idResidente)        return setError('El residente es requerido')
+  if (!descripcion.trim()) return setError('La descripción es requerida')
+  if (!monto)              return setError('El monto es requerido')
+  if (!fechaInfraccion)    return setError('La fecha de infracción es requerida')
+  setLoading(true); setError(null)
+  try {
+    const payload = {
+      Id_Multa:           multa ? multa.id_Multa : undefined,
+      Id_Residente:       Number(idResidente),
+      Id_Propiedad:       Number(idPropiedad) || 0,
+      Id_Tipo_Infraccion: 0,
+      Descripcion:        descripcion,
+      Monto:              Number(monto),
+      Fecha_Infraccion:   fechaInfraccion,
+      Fecha_Vencimiento:  fechaVencimiento || fechaInfraccion,
+      Estado:             estado,
+      Evidencia:          evidenciaUrl || '',
+      Id_Factura:         0,
+      Id_Apelacion:       0,
+      Id_Emitida:         1,
+      Id_Aprobada:        0,
+      Observaciones:      observaciones || '',
+      Fecha_Registro:     new Date().toISOString(),
     }
+    multa ? await updateMulta(multa.id_Multa, payload) : await createMulta(payload)
+    onSaved()
+  } catch (err) {
+    setError(err.response?.data?.message ?? err.message)
+  } finally {
+    setLoading(false)
   }
+}
 
   if (!show) return null
   return (
@@ -97,10 +102,13 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
                   <FkSelector
                     label="Residente" required
                     fetchFn={getResidentes}
-                    getId={r => r.id_Residente}
-                    getLabel={r => r.nombres
-                      ? `${r.nombres} ${r.apellidos ?? ''}`.trim()
-                      : `#${r.id_Residente}`}
+                    getId={r => r.id_Residente ?? r.Id_Residente}
+                    getLabel={r => {
+                      const id = r.id_Residente ?? r.Id_Residente
+                      const tipo = r.tipo_Residente ?? r.Tipo_Residente ?? ''
+                      const prop = r.id_Propiedad ?? r.Id_Propiedad ?? ''
+                      return `Residente #${id} — ${tipo} Prop.${prop}`
+                    }}
                     value={idResidente}
                     displayValue={labelRes}
                     onChange={(id, lbl) => { setIdRes(id); setLabelRes(lbl) }}
