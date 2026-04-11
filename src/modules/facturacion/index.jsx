@@ -21,7 +21,7 @@ export default function FacturacionModule({ mod, activeSubModule, setActiveSubMo
   const CRUD_CARDS = [
   { id: 'factura',             label: 'Factura',        emoji: '🏦', desc: 'Gestión de Bancos',               color: '#0d6efd' },
   { id: 'ciclo-factura',       label: 'Ciclo Factura',  emoji: '📉', desc: 'Gestión de Concepto Descuento',   color: '#198754' },
-  { id: 'tipo-servicio',       label: 'Metodo de Pago', emoji: '💰', desc: 'Gestión de Metodo de Pago',       color: '#fd7e14' },
+  { id: 'tipo-servicio',       label: 'Tipo de servicio', emoji: '💰', desc: 'Gestión de Metodo de Pago',       color: '#fd7e14' },
 ]
 
   const SUB_MODULE_VIEWS = {
