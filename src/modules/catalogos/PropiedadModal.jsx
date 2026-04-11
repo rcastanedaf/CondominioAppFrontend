@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPropiedad, updatePropiedad } from './propiedadService'
+import FkSelector from '../../components/FkSelector'
+import { getTipoPropiedades } from '../catalogos/tipoPropiedadService'
 
 const ESTADOS = ['DISPONIBLE', 'OCUPADA', 'EN_MANTENIMIENTO', 'INACTIVA']
 
@@ -14,6 +16,8 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
   const [descripcion,      setDescripcion] = useState('')
   const [loading,          setLoading]     = useState(false)
   const [error,            setError]       = useState(null)
+  const [labelTipo, setLabelTipo] = useState('')
+
 
   useEffect(() => {
     if (propiedad) {
@@ -25,9 +29,11 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
       setNumParq(propiedad.numParqueos ?? '')
       setEstado(propiedad.estado ?? 'DISPONIBLE')
       setDescripcion(propiedad.descripcion ?? '')
+      setLabelTipo('')
     } else {
       setIdTipo(''); setCodigo(''); setNivel(''); setAreaM2('')
       setNumHab(''); setNumParq(''); setEstado('DISPONIBLE'); setDescripcion('')
+      setLabelTipo('')
     }
     setError(null)
   }, [propiedad, show])
@@ -67,8 +73,16 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
               {error && <div className="alert alert-danger py-2 mb-3"><i className="bi bi-exclamation-circle me-2" />{error}</div>}
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Tipo Propiedad (FK)</label>
-                  <input type="number" className="form-control" placeholder="ID tipo propiedad" value={idTipoPropiedad} onChange={e => setIdTipo(e.target.value)} />
+                  <FkSelector
+                    label="Tipo Propiedad"
+                    fetchFn={getTipoPropiedades}
+                    getId={t => t.idTipoPropiedad ?? t.id}
+                    getLabel={t => t.nombre ?? t.descripcion ?? `#${t.idTipoPropiedad ?? t.id}`}
+                    value={idTipoPropiedad}
+                    displayValue={labelTipo}
+                    onChange={(id, lbl) => { setIdTipo(id); setLabelTipo(lbl) }}
+                    placeholder="Selecciona tipo..."
+                  />
                 </div>
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Código <span className="text-danger">*</span></label>

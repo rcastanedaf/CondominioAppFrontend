@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { createCobroMora, updateCobroMora } from './cobroMoraService'
+import { getCuentasCobrar } from './cuentaCobrarService'
+import FkSelector from '../../components/FkSelector'
+
 
 export default function CobroMoraModal({ show, onClose, onSaved, cobro }) {
   const [idCuenta,          setIdCuenta]    = useState('')
@@ -12,6 +15,8 @@ export default function CobroMoraModal({ show, onClose, onSaved, cobro }) {
   const [observaciones,     setObs]         = useState('')
   const [loading,           setLoading]     = useState(false)
   const [error,             setError]       = useState(null)
+  const [labelCuenta, setLabelCuenta] = useState('')
+
 
   useEffect(() => {
     if (cobro) {
@@ -62,8 +67,16 @@ export default function CobroMoraModal({ show, onClose, onSaved, cobro }) {
               {error && <div className="alert alert-danger py-2 mb-3"><i className="bi bi-exclamation-circle me-2" />{error}</div>}
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Cuenta <span className="text-danger">*</span></label>
-                  <input type="number" className="form-control" value={idCuenta} onChange={e => setIdCuenta(e.target.value)} autoFocus />
+                  <FkSelector
+                    label="Cuenta x Cobrar" required
+                    fetchFn={getCuentasCobrar}
+                    getId={c => c.idCuenta ?? c.id}
+                    getLabel={c => c.descripcion ?? `Cuenta #${c.idCuenta ?? c.id}`}
+                    value={idCuenta}
+                    displayValue={labelCuenta}
+                    onChange={(id, lbl) => { setIdCuenta(id); setLabelCuenta(lbl) }}
+                    placeholder="Selecciona cuenta..."
+                  />
                 </div>
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Fecha Cálculo <span className="text-danger">*</span></label>

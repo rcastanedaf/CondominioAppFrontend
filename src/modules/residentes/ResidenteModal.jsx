@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { createResidente, updateResidente } from './residenteService'
+import FkSelector from '../../components/FkSelector'
+import { getPersonas } from './personaService'
+import { getPropiedades } from '../catalogos/propiedadService'
 
 const TIPOS_RESIDENTE = ['PROPIETARIO', 'ARRENDATARIO', 'FAMILIAR', 'OTRO']
 
@@ -13,6 +16,8 @@ export default function ResidenteModal({ show, onClose, onSaved, residente }) {
   const [observaciones,setObs]          = useState('')
   const [loading,      setLoading]      = useState(false)
   const [error,        setError]        = useState(null)
+  const [labelPersona,   setLabelPersona]   = useState('')
+  const [labelPropiedad, setLabelPropiedad] = useState('')
 
   useEffect(() => {
     if (residente) {
@@ -63,12 +68,31 @@ export default function ResidenteModal({ show, onClose, onSaved, residente }) {
               {error && <div className="alert alert-danger py-2 mb-3"><i className="bi bi-exclamation-circle me-2" />{error}</div>}
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Persona (FK) <span className="text-danger">*</span></label>
-                  <input type="number" className="form-control" value={idPersona} onChange={e => setIdPersona(e.target.value)} autoFocus />
+                  <FkSelector
+                    label="Persona" required
+                    fetchFn={getPersonas}
+                    getId={p => p.idPersona ?? p.id}
+                    getLabel={p => p.nombres
+                      ? `${p.nombres} ${p.apellidos ?? ''}`.trim()
+                      : `#${p.idPersona ?? p.id}`}
+                    value={idPersona}
+                    displayValue={labelPersona}
+                    onChange={(id, lbl) => { setIdPersona(id); setLabelPersona(lbl) }}
+                    placeholder="Selecciona persona..."
+                  />
                 </div>
+
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Propiedad (FK) <span className="text-danger">*</span></label>
-                  <input type="number" className="form-control" value={idPropiedad} onChange={e => setIdPropiedad(e.target.value)} />
+                  <FkSelector
+                    label="Propiedad" required
+                    fetchFn={getPropiedades}
+                    getId={p => p.idPropiedad ?? p.id}
+                    getLabel={p => p.codigo ?? p.nombre ?? `#${p.idPropiedad ?? p.id}`}
+                    value={idPropiedad}
+                    displayValue={labelPropiedad}
+                    onChange={(id, lbl) => { setIdPropiedad(id); setLabelPropiedad(lbl) }}
+                    placeholder="Selecciona propiedad..."
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Tipo Residente <span className="text-danger">*</span></label>

@@ -111,7 +111,7 @@ export default function IncidenciaDetalle({ modColor = '#dc3545', onRegisterTask
   if (error)   return <div className="alert alert-danger py-2"><i className="bi bi-exclamation-circle me-2" />{error}</div>
 
   return (
-    <div className="d-flex flex-column gap-3">
+    <div className="d-flex flex-column gap-3" style={{ overflowY: 'auto' }}>
 
       {/* ══ INCIDENCIAS ══════════════════════════════════════ */}
       <div className="card border-0 shadow-sm">

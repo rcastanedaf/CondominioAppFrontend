@@ -55,7 +55,7 @@ export default function CategoriaIncidenciaTable({ moduleColor }) {
         totalDatos={datosFiltrados.length}
         label="categorías"
       />
-      <div className="cms-table-wrap">
+      <div className="cms-table-wrap" style={{ overflowY: 'auto' }}>
         <table className="table table-hover cms-table">
           <thead><tr><th>#</th><th>Nombre</th><th>Descripción</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody>

@@ -7,11 +7,34 @@ const fmt = (n) => `Q ${Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/
 
 const ESTADO_PAGO_COLOR = {
   PENDIENTE:   'warning',
-  APLICADO:    'success',
-  ANULADO:     'danger',
-  EN_REVISION: 'info',
-  CONFIRMADO:  'primary',
+  CONFIRMADO:  'success',
+  RECHAZADO:   'danger',
   REVERTIDO:   'secondary',
+}
+
+// ── Helper: normaliza un pago crudo del backend ──────────────────────────────
+function normalizePago(p) {
+  return {
+    id:               p.IdPago          ?? p.idPago,   // usado en key / tabla
+    idPago:           p.IdPago          ?? p.idPago,   // ✅ FIX: necesario para el modal al editar
+    idFactura:        p.IdFactura        ?? p.idFactura,
+    numeroRecibo:     p.NumeroRecibo     ?? p.numeroRecibo,
+    fechaPago:        p.FechaPago        ?? p.fechaPago,
+    fechaValor:       p.FechaValor       ?? p.fechaValor,
+    montoPagado:      p.MontoPagado      ?? p.montoPagado,
+    idMoneda:         p.IdMoneda         ?? p.idMoneda,
+    tipoCambio:       p.TipoCambio       ?? p.tipoCambio,
+    montoEnGtq:       p.MontoEnGtq       ?? p.montoEnGtq,
+    idMetodoPago:     p.IdMetodoPago     ?? p.idMetodoPago,
+    idBancoOrigen:    p.IdBancoOrigen    ?? p.idBancoOrigen,
+    idBancoDestino:   p.IdBancoDestino   ?? p.idBancoDestino,
+    referencia:       p.Referencia       ?? p.referencia,
+    imagenVoucherUrl: p.ImagenVoucherUrl ?? p.imagenVoucherUrl,
+    estado:           p.Estado           ?? p.estado,
+    registradoPor:    p.RegistradoPor    ?? p.registradoPor,
+    aprobadoPor:      p.AprobadoPor      ?? p.aprobadoPor,
+    observaciones:    p.Observaciones    ?? p.observaciones,
+  }
 }
 
 export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHandler }) {
@@ -22,8 +45,8 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
   const [errorRes,        setErrorRes]     = useState(null)
   const [resSeleccionado, setResSelec]     = useState(null)
   const [filterTipo,      setFilterTipo]   = useState('')
-  const [personas,   setPersonas]   = useState([])
-  const [todosPagos, setTodosPagos] = useState([])
+  const [personas,        setPersonas]     = useState([])
+  const [todosPagos,      setTodosPagos]   = useState([])
 
   // Paginación residentes
   const resFiltradosTipo = residentes.filter(r =>
@@ -61,46 +84,42 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
 
   // ── Cargar residentes ─────────────────────────────────────
   useEffect(() => {
-  setLoadingRes(true)
-  Promise.all([getResidentes(), getPersonas()])
-    .then(([resRes, perRes]) => {
-      console.log('Residentes raw:', resRes)     
-      console.log('Personas raw:', perRes)       
-      // ── Normalizar respuesta del backend ──────────────────
-      // .NET puede devolver el array directo o dentro de { data: [...] }
-      const listaResidentes = Array.isArray(resRes.data)
-        ? resRes.data
-        : resRes.data?.data ?? []
+    setLoadingRes(true)
+    Promise.all([getResidentes(), getPersonas()])
+      .then(([resRes, perRes]) => {
+        const listaResidentes = Array.isArray(resRes.data)
+          ? resRes.data
+          : resRes.data?.data ?? []
 
-      const listaPersonas = Array.isArray(perRes.data)
-        ? perRes.data
-        : perRes.data?.data ?? []
+        const listaPersonas = Array.isArray(perRes.data)
+          ? perRes.data
+          : perRes.data?.data ?? []
 
-      const enriched = listaResidentes.map(r => {
-        const persona = listaPersonas.find(
-          p => (p.id_Persona ?? p.Id_Persona) === (r.id_Persona ?? r.Id_Persona)
-        )
-        return {
-          id:            r.id_Residente  ?? r.Id_Residente,
-          id_Persona:    r.id_Persona    ?? r.Id_Persona,
-          id_Propiedad:  r.id_Propiedad  ?? r.Id_Propiedad,
-          tipoResidente: r.tipo_Residente ?? r.Tipo_Residente ?? r.tipoResidente,
-          fechaIngreso:  r.fecha_Ingreso  ?? r.Fecha_Ingreso,
-          estado:        r.estado ?? r.Estado,
-          observaciones: r.observaciones  ?? r.Observaciones,
-          nombres:       persona?.nombres      ?? persona?.Nombres      ?? `(Persona #${r.id_Persona ?? r.Id_Persona})`,
-          apellidos:     persona?.apellidos    ?? persona?.Apellidos    ?? '',
-          dpi:           persona?.dpi          ?? persona?.DPI          ?? '—',
-          telefono:      persona?.telefono_Principal ?? persona?.Telefono_Principal ?? '—',
-          email:         persona?.email        ?? persona?.Email        ?? '—',
-        }
+        const enriched = listaResidentes.map(r => {
+          const persona = listaPersonas.find(
+            p => (p.id_Persona ?? p.Id_Persona) === (r.id_Persona ?? r.Id_Persona)
+          )
+          return {
+            id:            r.id_Residente  ?? r.Id_Residente,
+            id_Persona:    r.id_Persona    ?? r.Id_Persona,
+            id_Propiedad:  r.id_Propiedad  ?? r.Id_Propiedad,
+            tipoResidente: r.tipo_Residente ?? r.Tipo_Residente ?? r.tipoResidente,
+            fechaIngreso:  r.fecha_Ingreso  ?? r.Fecha_Ingreso,
+            estado:        r.estado ?? r.Estado,
+            observaciones: r.observaciones  ?? r.Observaciones,
+            nombres:       persona?.nombres      ?? persona?.Nombres      ?? `(Persona #${r.id_Persona ?? r.Id_Persona})`,
+            apellidos:     persona?.apellidos    ?? persona?.Apellidos    ?? '',
+            dpi:           persona?.dpi          ?? persona?.DPI          ?? '—',
+            telefono:      persona?.telefono_Principal ?? persona?.Telefono_Principal ?? '—',
+            email:         persona?.email        ?? persona?.Email        ?? '—',
+          }
+        })
+
+        setResidentes(enriched)
       })
-
-      setResidentes(enriched)
-    })
-    .catch(err => setErrorRes(err.message))
-    .finally(() => setLoadingRes(false))
-}, [])
+      .catch(err => setErrorRes(err.message))
+      .finally(() => setLoadingRes(false))
+  }, [])
 
   // Deseleccionar si desaparece del filtro
   useEffect(() => {
@@ -110,41 +129,18 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
   }, [filterTipo]) // eslint-disable-line
 
   // ── Cargar pagos al seleccionar residente ─────────────────
-  // ── Cargar pagos al seleccionar residente ─────────────────
-useEffect(() => {
-  if (!resSeleccionado) { setPagos([]); return }
-  setLoadingPag(true)
-  setErrorPag(null)
-  getPagosByResidente(resSeleccionado.id)
-    .then(res => {
-      console.log('Pagos raw:', res.data[0])
-      
-      // ✅ LÍNEA QUE FALTABA: extraer la lista del response
-      const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
-
-      const normalized = lista.map(p => ({
-        id:               p.IdPago          ?? p.idPago,
-        idFactura:        p.IdFactura        ?? p.idFactura,
-        numeroRecibo:     p.NumeroRecibo     ?? p.numeroRecibo,
-        fechaPago:        p.FechaPago        ?? p.fechaPago,
-        fechaValor:       p.FechaValor       ?? p.fechaValor,
-        montoPagado:      p.MontoPagado      ?? p.montoPagado,
-        idMoneda:         p.IdMoneda         ?? p.idMoneda,
-        tipoCambio:       p.TipoCambio       ?? p.tipoCambio,
-        montoEnGtq:       p.MontoEnGtq       ?? p.montoEnGtq,
-        idMetodoPago:     p.IdMetodoPago     ?? p.idMetodoPago,
-        idBancoOrigen:    p.IdBancoOrigen    ?? p.idBancoOrigen,
-        idBancoDestino:   p.IdBancoDestino   ?? p.idBancoDestino,
-        referencia:       p.Referencia       ?? p.referencia,
-        imagenVoucherUrl: p.ImagenVoucherUrl ?? p.imagenVoucherUrl,
-        estado:           p.Estado           ?? p.estado,
-        observaciones:    p.Observaciones    ?? p.observaciones,
-      }))
-      setPagos(normalized)
-    })
-    .catch(err => setErrorPag(err.message))
-    .finally(() => setLoadingPag(false))
-}, [resSeleccionado])
+  useEffect(() => {
+    if (!resSeleccionado) { setPagos([]); return }
+    setLoadingPag(true)
+    setErrorPag(null)
+    getPagosByResidente(resSeleccionado.id)
+      .then(res => {
+        const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+        setPagos(lista.map(normalizePago))  // ✅ usa helper centralizado
+      })
+      .catch(err => setErrorPag(err.message))
+      .finally(() => setLoadingPag(false))
+  }, [resSeleccionado])
 
   // ── TaskPanel ─────────────────────────────────────────────
   const handleNuevoPago = useCallback(() => {
@@ -157,44 +153,32 @@ useEffect(() => {
   }, [handleNuevoPago, onRegisterTaskHandler])
 
   // ── CRUD pagos ────────────────────────────────────────────
-  const handleEditar   = (p) => { setPagoEdit(p); setShowModal(true) }
+  const handleEditar = (p) => { setPagoEdit(p); setShowModal(true) }
+
   const handleEliminar = async (id) => {
-  try {
-    await deletePago(id)
-    setTodosPagos(prev => prev.filter(p => (p.id_Pago ?? p.Id_Pago ?? p.id) !== id))
-    setPagos(prev => prev.filter(p => (p.id_Pago ?? p.Id_Pago ?? p.id) !== id))
-    setConfirmId(null)
-  } catch (err) { alert('Error al eliminar: ' + err.message) }
-}
+    try {
+      await deletePago(id)
+      // ✅ FIX: ambas listas usan .id (que es el mismo valor que idPago)
+      setPagos(prev => prev.filter(p => p.id !== id))
+      setTodosPagos(prev => prev.filter(p => p.id !== id))
+      setConfirmId(null)
+    } catch (err) { alert('Error al eliminar: ' + err.message) }
+  }
+
   const handleSaved = () => {
-      setShowModal(false)
-      if (resSeleccionado) {
-        getPagosByResidente(resSeleccionado.id)
-          .then(res => {
-            const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
-            const normalized = lista.map(p => ({
-              id:               p.IdPago          ?? p.idPago,
-              idFactura:        p.IdFactura        ?? p.idFactura,
-              numeroRecibo:     p.NumeroRecibo     ?? p.numeroRecibo,
-              fechaPago:        p.FechaPago        ?? p.fechaPago,
-              fechaValor:       p.FechaValor       ?? p.fechaValor,
-              montoPagado:      p.MontoPagado      ?? p.montoPagado,
-              idMoneda:         p.IdMoneda         ?? p.idMoneda,
-              idMetodoPago:     p.IdMetodoPago     ?? p.idMetodoPago,
-              idBancoOrigen:    p.IdBancoOrigen    ?? p.idBancoOrigen,
-              referencia:       p.Referencia       ?? p.referencia,
-              imagenVoucherUrl: p.ImagenVoucherUrl ?? p.imagenVoucherUrl,
-              estado:           p.Estado           ?? p.estado,
-              observaciones:    p.Observaciones    ?? p.observaciones,
-            }))
-            setPagos(normalized)
-          })
-          .catch(err => setErrorPag(err.message))
-      }
+    setShowModal(false)
+    if (resSeleccionado) {
+      getPagosByResidente(resSeleccionado.id)
+        .then(res => {
+          const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+          setPagos(lista.map(normalizePago))  // ✅ usa helper centralizado
+        })
+        .catch(err => setErrorPag(err.message))
     }
+  }
 
   // ── Totales ───────────────────────────────────────────────
-  const totalAplicado  = pagos.filter(p => p.estado === 'APLICADO').reduce((a, p) => a + Number(p.montoPagado), 0)
+  const totalConfirmado  = pagos.filter(p => p.estado === 'CONFIRMADO').reduce((a, p) => a + Number(p.montoPagado), 0)
   const totalPendiente = pagos.filter(p => p.estado === 'PENDIENTE').reduce((a, p) => a + Number(p.montoPagado), 0)
 
   // ── Helper paginación ─────────────────────────────────────
@@ -381,7 +365,7 @@ useEffect(() => {
                 <select className="form-select form-select-sm" style={{ width: 145 }}
                   value={filterEstPag} onChange={e => setFilterEstPag(e.target.value)}>
                   <option value="">Todos los estados</option>
-                  {['PENDIENTE','APLICADO','ANULADO','EN_REVISION'].map(e =>
+                  {['PENDIENTE', 'CONFIRMADO', 'RECHAZADO', 'REVERTIDO'].map(e =>
                     <option key={e} value={e}>{e}</option>
                   )}
                 </select>
@@ -434,7 +418,7 @@ useEffect(() => {
                       <i className="bi bi-inbox me-2" />Sin pagos registrados
                     </td></tr>
                   ) : pagPagina.map(p => (
-                    <tr key={p.id_Pago ?? p.Id_Pago ?? p.id}>
+                    <tr key={p.id}>
                       <td className="text-muted">{p.id}</td>
                       <td className="fw-semibold" style={{ color: modColor }}>{p.numeroRecibo}</td>
                       <td>{p.idFactura ?? '—'}</td>
@@ -458,17 +442,17 @@ useEffect(() => {
                             onClick={() => handleEditar(p)}>
                             <i className="bi bi-pencil" style={{ fontSize: 11 }} />
                           </button>
-                          {confirmId === (p.id_Pago ?? p.Id_Pago ?? p.id) ? (
+                          {confirmId === p.id ? (
                             <>
                               <span className="text-danger small align-self-center">¿Eliminar?</span>
                               <button className="btn btn-sm btn-danger py-0 px-1"
-                                onClick={() => handleEliminar(p.id_Pago ?? p.Id_Pago ?? p.id)}>Sí</button>
+                                onClick={() => handleEliminar(p.id)}>Sí</button>
                               <button className="btn btn-sm btn-outline-secondary py-0 px-1"
                                 onClick={() => setConfirmId(null)}>No</button>
                             </>
                           ) : (
                             <button className="btn btn-sm btn-outline-danger py-0 px-1"
-                              onClick={() => setConfirmId(p.id_Pago ?? p.Id_Pago ?? p.id)}>
+                              onClick={() => setConfirmId(p.id)}>
                               <i className="bi bi-trash" style={{ fontSize: 11 }} />
                             </button>
                           )}
@@ -484,9 +468,9 @@ useEffect(() => {
             <div className="card-footer bg-white d-flex align-items-center justify-content-between flex-wrap gap-3 py-2"
               style={{ borderTop: '1px solid #dee2e6' }}>
               <div className="d-flex gap-4" style={{ fontSize: 13 }}>
-                <span>Aplicados: <strong className="text-success">{fmt(totalAplicado)}</strong></span>
+                <span>Aplicados: <strong className="text-success">{fmt(totalConfirmado)}</strong></span>
                 <span>Pendientes: <strong className="text-warning">{fmt(totalPendiente)}</strong></span>
-                <span>Total: <strong style={{ color: modColor }}>{fmt(totalAplicado + totalPendiente)}</strong></span>
+                <span>Total: <strong style={{ color: modColor }}>{fmt(totalConfirmado + totalPendiente)}</strong></span>
               </div>
               <nav><BtnPag pagina={pagPag} total={totPagPag} irA={irAPag} paginas={paginasPag} color={modColor} /></nav>
             </div>
@@ -494,7 +478,7 @@ useEffect(() => {
         )}
       </div>
 
-      {/* Modal pago — usa el PagoModal ya existente */}
+      {/* Modal pago */}
       <PagoModal
         show={showModal}
         pago={pagoEdit}

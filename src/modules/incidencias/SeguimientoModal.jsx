@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
 import { createSeguimiento, updateSeguimiento } from './seguimientoService'
+import FkSelector from '../../components/FkSelector'
+import { getPersonas } from '../residentes/personaService'
 
 const ESTADOS = ['ABIERTA', 'EN_PROCESO', 'EN_ESPERA', 'RESUELTA', 'CERRADA', 'CANCELADA']
 
 export default function SeguimientoModal({ show, onClose, onSaved, incidenciaId, seguimiento, modColor = '#dc3545' }) {
-  const [idUsuario,   setIdUsuario]  = useState('')
-  const [comentario,  setComentario] = useState('')
-  const [estadoNuevo, setEstado]     = useState('')
-  const [loading,     setLoading]    = useState(false)
-  const [error,       setError]      = useState(null)
+  const [idUsuario,    setIdUsuario]    = useState('')
+  const [labelUsuario, setLabelUsuario] = useState('')
+  const [comentario,   setComentario]   = useState('')
+  const [estadoNuevo,  setEstado]       = useState('')
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState(null)
 
   useEffect(() => {
     if (seguimiento) {
@@ -16,24 +19,26 @@ export default function SeguimientoModal({ show, onClose, onSaved, incidenciaId,
       setComentario(seguimiento.comentario ?? '')
       setEstado(seguimiento.estadoNuevo ?? '')
     } else {
-      setIdUsuario(''); setComentario(''); setEstado('')
+      setIdUsuario(''); setLabelUsuario('')
+      setComentario(''); setEstado('')
     }
     setError(null)
   }, [seguimiento, show])
 
   const handleSubmit = async () => {
     if (!comentario.trim()) return setError('El comentario es requerido')
+    if (!idUsuario)         return setError('El usuario es requerido')
     setLoading(true); setError(null)
     try {
       const payload = {
-        id:           seguimiento ? seguimiento.idSeguimiento  : 0,
-        idIncidencia: incidenciaId,
-        idUsuario:    Number(idUsuario) || null,
+        idSeguimiento: seguimiento ? seguimiento.idSeguimiento : 0,
+        idIncidencia:  incidenciaId,
+        idUsuario:     Number(idUsuario) || null,
         comentario,
-        estadoNuevo:  estadoNuevo || null,
+        estadoNuevo:   estadoNuevo || null,
       }
       seguimiento
-        ? await updateSeguimiento(seguimiento.id, payload)
+        ? await updateSeguimiento(seguimiento.idSeguimiento, payload)
         : await createSeguimiento(payload)
       onSaved()
     } catch (err) {
@@ -64,14 +69,25 @@ export default function SeguimientoModal({ show, onClose, onSaved, incidenciaId,
                   <i className="bi bi-exclamation-circle me-2" />{error}
                 </div>
               )}
-
               <div className="row g-3">
+
+                {/* Usuario — usa getPersonas porque no hay usuarioService */}
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">ID Usuario (FK)</label>
-                  <input type="number" className="form-control" value={idUsuario}
-                    onChange={e => setIdUsuario(e.target.value)} placeholder="ID del usuario" />
+                  <FkSelector
+                    label="Usuario"
+                    fetchFn={getPersonas}
+                    getId={p => p.id_Persona ?? p.Id_Persona ?? p.idPersona ?? p.id}
+                    getLabel={p => p.nombres
+                      ? `${p.nombres} ${p.apellidos ?? ''}`.trim()
+                      : `#${p.idPersona ?? p.id}`}
+                    value={idUsuario}
+                    displayValue={labelUsuario}
+                    onChange={(id, lbl) => { setIdUsuario(id); setLabelUsuario(lbl) }}
+                    placeholder="Selecciona usuario..."
+                  />
                 </div>
 
+                {/* Cambio de Estado */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Cambio de Estado</label>
                   <select className="form-select" value={estadoNuevo}
@@ -81,6 +97,7 @@ export default function SeguimientoModal({ show, onClose, onSaved, incidenciaId,
                   </select>
                 </div>
 
+                {/* Comentario */}
                 <div className="col-12">
                   <label className="form-label fw-semibold">
                     Comentario <span className="text-danger">*</span>
@@ -94,6 +111,7 @@ export default function SeguimientoModal({ show, onClose, onSaved, incidenciaId,
                     autoFocus
                   />
                 </div>
+
               </div>
             </div>
 

@@ -39,6 +39,8 @@ export default function FacturaDetalle({ modColor = '#dc3545', onRegisterTaskHan
   const [confirmDetId,        setConfirmDetId]    = useState(null)
   const [showModal,           setShowModal]       = useState(false)
   const [detalleEdit,         setDetalleEdit]     = useState(null)
+  const [facturaParaPago, setFacturaParaPago] = useState(null)
+
 
   // ── Fetch facturas ────────────────────────────────────────
   const fetchFacturas = () => {
@@ -153,34 +155,10 @@ export default function FacturaDetalle({ modColor = '#dc3545', onRegisterTaskHan
   }
 
   // ── Guardar detalle ───────────────────────────────────────
-  const handleSaved = async (det) => {
-    try {
-      const payload = {
-        idDetalle:           detalleEdit?.idDetalle ?? 0,
-        idFactura:           facturaSeleccionada.idFactura,
-        numeroLinea:         det.numero_linea        ?? det.numeroLinea        ?? (detalles.length + 1),
-        descripcion:         det.descripcion,
-        cantidad:            Number(det.cantidad),
-        precioUnitario:      Number(det.precio_unitario      ?? det.precioUnitario),
-        descuentoPorcentaje: Number(det.descuento_porcentaje ?? det.descuentoPorcentaje ?? 0),
-        descuentoMonto:      Number(det.descuento_monto      ?? det.descuentoMonto      ?? 0),
-        subtotalBruto:       Number(det.subtotal_bruto       ?? det.subtotalBruto       ?? 0),
-        subtotalNeto:        Number(det.subtotal_neto        ?? det.subtotalNeto        ?? 0),
-        aplicaIva:           det.aplica_iva  ?? det.aplicaIva  ?? false,
-        porcentajeIva:       Number(det.porcentaje_iva ?? det.porcentajeIva ?? 0),
-        montoIva:            Number(det.monto_iva      ?? det.montoIva      ?? 0),
-        totalLinea:          Number(det.total_linea    ?? det.totalLinea    ?? 0),
-        observaciones:       det.observaciones ?? '',
-      }
-      if (detalleEdit) {
-        await updateDetalle(payload)
-      } else {
-        await createDetalle(payload)
-      }
-      setShowModal(false)
-      setDetalleEdit(null)
-      fetchDetalles(facturaSeleccionada)
-    } catch (err) { alert('Error al guardar posición: ' + err.message) }
+  const handleSaved = () => {
+    setShowModal(false)
+    setDetalleEdit(null)
+    fetchDetalles(facturaSeleccionada)
   }
 
   // ── Cerrar modales ────────────────────────────────────────
@@ -303,7 +281,10 @@ export default function FacturaDetalle({ modColor = '#dc3545', onRegisterTaskHan
                         <i className="bi bi-pencil" style={{ fontSize: 11 }} />
                       </button>
                       <button className="btn btn-sm btn-outline-success py-0 px-1"
-                        onClick={() => setShowPagoModal(true)}>
+                        onClick={() => {
+                          setFacturaParaPago(f)   // ✅ guardar la factura seleccionada
+                          setShowPagoModal(true)
+                        }}>
                         <i className="bi bi-cash-coin" style={{ fontSize: 11 }} />
                       </button>
                       {confirmFactId === f.idFactura ? (
@@ -504,6 +485,10 @@ export default function FacturaDetalle({ modColor = '#dc3545', onRegisterTaskHan
         detalle={detalleEdit}
         factura={facturaSeleccionada}
         modColor={modColor}
+        numeroLinea={
+          detalles.length === 0 ? 1 
+          : Math.max(...detalles.map(d => d.numeroLinea ?? 0)) + 1
+        }
         onClose={handleCloseDetalleModal}
         onSaved={handleSaved}
       />
@@ -511,8 +496,9 @@ export default function FacturaDetalle({ modColor = '#dc3545', onRegisterTaskHan
       <PagoModal
         show={showPagoModal}
         pago={null}
-        onClose={() => setShowPagoModal(false)}
-        onSaved={() => setShowPagoModal(false)}
+        facturaInicial={facturaParaPago}   // ✅ nueva prop
+        onClose={() => { setShowPagoModal(false); setFacturaParaPago(null) }}
+        onSaved={() => { setShowPagoModal(false); setFacturaParaPago(null); fetchFacturas() }}
       />
     </div>
   )
