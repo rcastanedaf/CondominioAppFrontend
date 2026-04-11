@@ -39,6 +39,7 @@ export default function FkSelector({
       try {
         const res = await fetchFn()
         const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+        console.log('primer item:', lista[0])
         setItems(lista)
       } catch { setItems([]) }
       finally { setLoading(false) }
@@ -130,9 +131,9 @@ export default function FkSelector({
               <div className="text-center py-3 text-muted" style={{ fontSize: 13 }}>
                 <i className="bi bi-inbox me-1" />Sin resultados
               </div>
-            ) : filtered.map(item => (
+            ) : filtered.map((item, idx) => (
               <div
-                key={getId(item)}
+                key={`fk-${getId(item) ?? idx}`}
                 onClick={() => handleSelect(item)}
                 style={{
                   padding: '7px 12px', cursor: 'pointer', fontSize: 13,

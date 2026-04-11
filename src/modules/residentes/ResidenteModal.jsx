@@ -4,7 +4,7 @@ import FkSelector from '../../components/FkSelector'
 import { getPersonas } from './personaService'
 import { getPropiedades } from '../catalogos/propiedadService'
 
-const TIPOS_RESIDENTE = ['PROPIETARIO', 'ARRENDATARIO', 'FAMILIAR', 'OTRO']
+const TIPOS_RESIDENTE = ['PROPIETARIO', 'INQUILINO']
 
 export default function ResidenteModal({ show, onClose, onSaved, residente }) {
   const [idPersona,    setIdPersona]    = useState('')
@@ -36,21 +36,30 @@ export default function ResidenteModal({ show, onClose, onSaved, residente }) {
   }, [residente, show])
 
   const handleSubmit = async () => {
-    if (!idPersona)   return setError('El ID de persona es requerido')
-    if (!idPropiedad) return setError('El ID de propiedad es requerido')
+    if (!idPersona)    return setError('El ID de persona es requerido')
+    if (!idPropiedad)  return setError('El ID de propiedad es requerido')
     if (!fechaIngreso) return setError('La fecha de ingreso es requerida')
     setLoading(true); setError(null)
     try {
       const payload = {
-        id: residente ? residente.id : 0,
-        idPersona: Number(idPersona), idPropiedad: Number(idPropiedad),
-        tipoResidente, fechaIngreso, fechaSalida: fechaSalida || null,
-        activo: Number(activo), observaciones,
+        Id_Residente:   residente ? residente.id : 0,
+        Id_Persona:     Number(idPersona),
+        Id_Propiedad:   Number(idPropiedad),
+        Tipo_Residente: tipoResidente,
+        Fecha_Ingreso:  fechaIngreso,
+        Fecha_Salida:   fechaSalida || null,
+        Activo:         Number(activo),
+        Observaciones:  observaciones || '',
       }
-      residente ? await updateResidente(residente.id, payload) : await createResidente(payload)
+      residente
+        ? await updateResidente(residente.id, payload)
+        : await createResidente(payload)
       onSaved()
-    } catch (err) { setError(err.message) }
-    finally { setLoading(false) }
+    } catch (err) {
+      setError(err.response?.data?.message ?? err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!show) return null
@@ -71,10 +80,10 @@ export default function ResidenteModal({ show, onClose, onSaved, residente }) {
                   <FkSelector
                     label="Persona" required
                     fetchFn={getPersonas}
-                    getId={p => p.idPersona ?? p.id}
+                    getId={p => p.id_Persona ?? p.idPersona ?? p.Id_Persona ?? p.id}
                     getLabel={p => p.nombres
-                      ? `${p.nombres} ${p.apellidos ?? ''}`.trim()
-                      : `#${p.idPersona ?? p.id}`}
+                            ? `${p.nombres} ${p.apellidos ?? ''}`.trim()
+                            : `#${p.id_Persona ?? p.id}`}
                     value={idPersona}
                     displayValue={labelPersona}
                     onChange={(id, lbl) => { setIdPersona(id); setLabelPersona(lbl) }}
@@ -86,8 +95,8 @@ export default function ResidenteModal({ show, onClose, onSaved, residente }) {
                   <FkSelector
                     label="Propiedad" required
                     fetchFn={getPropiedades}
-                    getId={p => p.idPropiedad ?? p.id}
-                    getLabel={p => p.codigo ?? p.nombre ?? `#${p.idPropiedad ?? p.id}`}
+                    getId={p => p.id_propiedad ?? p.idPropiedad ?? p.Id_Propiedad ?? p.id}
+                    getLabel={p => p.codigo ?? p.nombre ?? `#${p.id_propiedad ?? p.id}`}
                     value={idPropiedad}
                     displayValue={labelPropiedad}
                     onChange={(id, lbl) => { setIdPropiedad(id); setLabelPropiedad(lbl) }}

@@ -81,6 +81,7 @@ export const MODULES = [
       { id: 'cuentas-cobrar', label: 'Cuentas por Cobrar' },
       { id: 'acuerdos-pago', label: 'Acuerdos de Pago' },
       { id: 'mora', label: 'Gestión de Mora' },
+      { id: 'multa', label: 'Gestión de Multas' },
     ],
     tasks: ['Registrar pago', 'Aplicar pago', 'Acuerdo de pago', 'Generar estado de cuenta', 'Notificar mora'],
   },
