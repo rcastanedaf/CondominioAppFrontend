@@ -28,10 +28,6 @@ export default function App() {
           activeSubModule={activeSubModule}
           setActiveSubModule={setActiveSubModule}
         />
-        <TaskPanel
-          activeModule={activeModule}
-          activeSubModule={activeSubModule}
-        />
       </div>
     </div>
   )

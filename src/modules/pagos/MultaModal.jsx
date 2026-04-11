@@ -23,14 +23,14 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
 
   useEffect(() => {
     if (multa) {
-      setIdRes(multa.idResidente ?? '')
-      setIdProp(multa.idPropiedad ?? '')
+      setIdRes(multa.id_Residente ?? null)
+      setIdProp(multa.id_Propiedad ?? null)
       setDesc(multa.descripcion ?? '')
       setMonto(multa.monto ?? '')
-      setFechaInf(multa.fechaInfraccion?.substring(0, 10) ?? '')
-      setFechaVenc(multa.fechaVencimiento?.substring(0, 10) ?? '')
+      setFechaInf(multa.fecha_Infraccion?.substring(0, 10) ?? '')
+      setFechaVenc(multa.fecha_Vencimiento?.substring(0, 10) ?? '')
       setEstado(multa.estado ?? 'PENDIENTE')
-      setEvidencia(multa.evidenciaUrl ?? '')
+      setEvidencia(multa.evidencia ?? '')
       setObs(multa.observaciones ?? '')
     } else {
       setIdRes(''); setLabelRes('')
@@ -50,19 +50,20 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
     if (!fechaInfraccion)    return setError('La fecha de infracción es requerida')
     setLoading(true); setError(null)
     try {
+      debugger
       const payload = {
-        id:               multa ? multa.id : 0,
-        idResidente:      Number(idResidente),
-        idPropiedad:      Number(idPropiedad) || null,
+        id_Multa:               multa ? multa.id_Multa :  undefined,
+        id_Residente:      Number(idResidente),
+        id_Propiedad:      Number(idPropiedad) || null,
         descripcion,
         monto:            Number(monto),
-        fechaInfraccion,
-        fechaVencimiento: fechaVencimiento || null,
+        fecha_Infraccion : fechaInfraccion,
+        fecha_Vencimiento: fechaVencimiento || null,
         estado,
-        evidenciaUrl,
+        evidencia:    evidenciaUrl || null,
         observaciones,
       }
-      multa ? await updateMulta(multa.id, payload) : await createMulta(payload)
+      multa ? await updateMulta(multa.id_Multa, payload) : await createMulta(payload)
       onSaved()
     } catch (err) {
       setError(err.response?.data?.message ?? err.message)
@@ -96,10 +97,10 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
                   <FkSelector
                     label="Residente" required
                     fetchFn={getResidentes}
-                    getId={r => r.idResidente ?? r.id}
+                    getId={r => r.id_Residente}
                     getLabel={r => r.nombres
                       ? `${r.nombres} ${r.apellidos ?? ''}`.trim()
-                      : `#${r.idResidente ?? r.id}`}
+                      : `#${r.id_Residente}`}
                     value={idResidente}
                     displayValue={labelRes}
                     onChange={(id, lbl) => { setIdRes(id); setLabelRes(lbl) }}
@@ -112,8 +113,8 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
                   <FkSelector
                     label="Propiedad"
                     fetchFn={getPropiedades}
-                    getId={p => p.idPropiedad ?? p.id}
-                    getLabel={p => p.codigo ?? p.nombre ?? `#${p.idPropiedad ?? p.id}`}
+                    getId={p => p.id_Propiedad}
+                    getLabel={p => p.codigo ?? p.nombre ?? `#${p.id_Propiedad}`}
                     value={idPropiedad}
                     displayValue={labelProp}
                     onChange={(id, lbl) => { setIdProp(id); setLabelProp(lbl) }}

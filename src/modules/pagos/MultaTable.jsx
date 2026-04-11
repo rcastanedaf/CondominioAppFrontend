@@ -42,25 +42,25 @@ export default function MultaTable({ moduleColor }) {
           <thead><tr><th>#</th><th>Residente</th><th>Descripción</th><th>Monto</th><th>F. Infracción</th><th>F. Vencimiento</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody>
             {rows.map((row, i) => (
-              <tr key={row.id ?? i}>
-                <td className="text-muted">{row.id}</td>
-                <td>{row.idResidente}</td>
+              <tr key={row.id_Multa ?? i}>
+                <td className="text-muted">{row.id_Multa}</td>
+                <td>{row.id_Residente}</td>
                 <td style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.descripcion}</td>
                 <td className="fw-semibold text-danger">Q {Number(row.monto).toFixed(2)}</td>
-                <td>{row.fechaInfraccion?.substring(0, 10)}</td>
-                <td className="text-muted">{row.fechaVencimiento?.substring(0, 10) ?? '—'}</td>
+                <td>{row.fecha_Infraccion?.substring(0, 10)}</td>
+                <td className="text-muted">{row.fecha_Vencimiento?.substring(0, 10) ?? '—'}</td>
                 <td><span className={`badge text-bg-${ESTADO_COLOR[row.estado] || 'secondary'}`}>{row.estado}</span></td>
                 <td>
                   <div className="d-flex gap-1">
                     <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(row); setShowModal(true) }}>
                       <i className="bi bi-pencil me-1" style={{ fontSize: 11 }} />Editar
                     </button>
-                    {confirmId === row.id ? (
+                    {confirmId === row.id_Multa ? (
                       <><span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id)}>Sí</button>
+                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id_Multa)}>Sí</button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button></>
                     ) : (
-                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.id)}>
+                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.id_Multa)}>
                         <i className="bi bi-trash me-1" style={{ fontSize: 11 }} />Eliminar
                       </button>
                     )}
