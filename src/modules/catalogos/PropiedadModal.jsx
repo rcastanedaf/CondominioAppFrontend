@@ -3,7 +3,7 @@ import { createPropiedad, updatePropiedad } from './propiedadService'
 import FkSelector from '../../components/FkSelector'
 import { getTipoPropiedades } from '../catalogos/tipoPropiedadService'
 
-const ESTADOS = ['DISPONIBLE', 'OCUPADA', 'EN_MANTENIMIENTO', 'INACTIVA']
+const ESTADOS = ['DISPONIBLE','ALQUILADA','VENDIDA','EN_MANTENIMIENTO']
 
 export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
   const [idTipoPropiedad,  setIdTipo]      = useState('')
@@ -24,7 +24,7 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
       setIdTipo(propiedad.id_tipo_propiedad ?? '')
       setCodigo(propiedad.codigo ?? '')
       setNivel(propiedad.nivel ?? '')
-      setAreaM2(propiedad.area_m2 ?? '')
+      setAreaM2(propiedad.area_M2 ?? '')
       setNumHab(propiedad.num_habitaciones ?? '')
       setNumParq(propiedad.num_parqueos ?? '')
       setEstado(propiedad.estado ?? 'DISPONIBLE')
@@ -44,15 +44,15 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
     setLoading(true); setError(null)
     try {
       const payload = {
-        id: propiedad ? propiedad.id : 0,
+        id: propiedad ? propiedad.id_propiedad : 0,
         id_tipo_propiedad: Number(idTipoPropiedad) || null,
         codigo, nivel: Number(nivel) || null,
-        area_m2: Number(areaM2) || null,
+        areaM2: Number(areaM2) || null,
         num_habitaciones: Number(numHabitaciones) || null,
         num_parqueos: Number(numParqueos) || null,
         estado, descripcion,
       }
-      propiedad ? await updatePropiedad(propiedad.id, payload) : await createPropiedad(payload)
+      propiedad ? await updatePropiedad(propiedad.id_propiedad, payload) : await createPropiedad(payload)
       onSaved()
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }

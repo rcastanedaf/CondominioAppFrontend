@@ -190,7 +190,7 @@ export default function FacturaDetalle({ modColor = '#dc3545', onRegisterTaskHan
   )
 
   return (
-    <div className="d-flex flex-column h-100 gap-3">
+    <div className="d-flex flex-column h-100 gap-3" style={{ overflowY: 'auto' }}>
 
       {/* ══ ENCABEZADO FACTURAS ═════════════════════════════ */}
       <div className="card border-0 shadow-sm">

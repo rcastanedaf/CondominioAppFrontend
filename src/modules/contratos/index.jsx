@@ -1,18 +1,17 @@
-import { useState } from 'react'
 import ModuleLayout    from '../../shared/components/ModuleLayout'
 import ContratoTable   from './ContratoTable'
 import RenovacionTable from './RenovacionTable'
 
 const CRUD_CARDS = [
-  { id: 'contratos-arrendamiento', label: 'Contratos',        emoji: '🧾', desc: 'Contratos de arrendamiento',  color: '#fd7e14' },
-  { id: 'renovacion',              label: 'Renovaciones',     emoji: '🔄', desc: 'Renovaciones de contrato',     color: '#0d6efd' },
-  { id: 'vigentes',                label: 'Vigentes',         emoji: '✅', desc: 'Contratos activos',            color: '#198754' },
-  { id: 'vencidos',                label: 'Vencidos',         emoji: '❌', desc: 'Contratos vencidos',           color: '#dc3545' },
+  { id: 'contratos-arrendamiento', label: 'Contratos',    emoji: '🧾', desc: 'Contratos de arrendamiento', color: '#fd7e14' },
+  { id: 'renovacion',              label: 'Renovaciones', emoji: '🔄', desc: 'Renovaciones de contrato',    color: '#0d6efd' },
+  { id: 'vigentes',                label: 'Vigentes',     emoji: '✅', desc: 'Contratos activos',           color: '#198754' },
+  { id: 'vencidos',                label: 'Vencidos',     emoji: '❌', desc: 'Contratos vencidos',          color: '#dc3545' },
 ]
 
 const SUB_VIEWS = {
-  'facturas':           (color) => <FacturaTable moduleColor={color} />,
-  'ciclos':             (color) => <CicloFacturacionTable moduleColor={color} />,
+  'contratos-arrendamiento': (color) => <ContratoTable moduleColor={color} />,
+  'renovacion':              (color) => <RenovacionTable moduleColor={color} />,
 }
 
 export default function ContratosModule({ mod, activeSubModule, setActiveSubModule }) {

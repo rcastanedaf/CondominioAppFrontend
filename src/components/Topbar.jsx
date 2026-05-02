@@ -1,10 +1,11 @@
 import { MODULES } from '../data/modules'
 
-export default function Topbar({ activeModule, activeSubModule, onToggleSidebar }) {
+export default function Topbar({ activeModule, activeSubModule, onToggleSidebar, user, onLogout }) {
   const mod = MODULES.find(m => m.id === activeModule)
   const sub = mod?.submodules.find(s => s.id === activeSubModule)
 
   return (
+    <div>
     <nav className="cms-topbar navbar navbar-expand px-3 d-flex align-items-center gap-2">
       {/* Toggle + Brand */}
       <div className="d-flex align-items-center gap-2">
@@ -27,5 +28,18 @@ export default function Topbar({ activeModule, activeSubModule, onToggleSidebar 
         </ol>
       </nav>
     </nav>
+    {user && (
+      <div className="d-flex align-items-center gap-2 ms-auto">
+        <span className="small text-muted">
+          <i className="bi bi-person-circle me-1" />
+          {user.username || user.nombres}
+        </span>
+        <button className="btn btn-sm btn-outline-secondary" onClick={onLogout}>
+          <i className="bi bi-box-arrow-right me-1" />Salir
+        </button>
+      </div>
+    )}
+    </div>
+    
   )
 }
