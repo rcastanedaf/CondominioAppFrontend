@@ -72,19 +72,23 @@ export default function RenovacionTable({ moduleColor }) {
         <table className="table table-hover cms-table">
           <thead>
             <tr>
-              <th>#</th><th>Contrato</th><th>Nueva Vigencia</th>
-              <th>Nuevo Monto</th><th>F. Registro</th><th>Acciones</th>
+              <th>#</th>
+              <th>Contrato</th>
+              <th>Nueva Vigencia</th>
+              <th>Nuevo Monto</th>
+              <th>F. Registro</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {datosPagina.length === 0 ? (
               <tr><td colSpan={6} className="text-center text-muted py-4"><i className="bi bi-inbox me-2" />Sin renovaciones registradas</td></tr>
             ) : datosPagina.map((row, i) => (
-              <tr key={row.id ?? i}>
-                <td className="text-muted">{row.id}</td>
-                <td className="fw-semibold">{row._labelContrato}</td>
-                <td>{row.fechaNuevaVigencia?.substring(0, 10)}</td>
-                <td className="fw-semibold">Q {Number(row.nuevoMonto || 0).toFixed(2)}</td>
+              <tr key={row.id_renovacion ?? i}>
+                <td className="text-muted">{row.id_renovacion}</td>
+                <td className="fw-semibold">{row.id_contrato}</td>
+                <td>{row.fechA_INICIO?.substring(0, 10)}- {row.fechA_FIN?.substring(0, 10)}</td>
+                <td className="fw-semibold">Q {Number(row.montO_NUEVO || 0).toFixed(2)}</td>
                 <td className="text-muted">{row.fechaRegistro?.substring(0, 10)}</td>
                 <td>
                   <div className="d-flex gap-1">
@@ -94,7 +98,7 @@ export default function RenovacionTable({ moduleColor }) {
                     {confirmId === row.id ? (
                       <>
                         <span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id)}>Sí</button>
+                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id_renovacion)}>Sí</button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button>
                       </>
                     ) : (

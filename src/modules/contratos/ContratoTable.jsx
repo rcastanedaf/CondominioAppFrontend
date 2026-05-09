@@ -105,7 +105,7 @@ export default function ContratoTable({ moduleColor }) {
                     {confirmId === row.id ? (
                       <>
                         <span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id)}>Sí</button>
+                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id_contrato)}>Sí</button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button>
                       </>
                     ) : (
