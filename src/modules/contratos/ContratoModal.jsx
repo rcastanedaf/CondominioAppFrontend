@@ -7,7 +7,7 @@ import { getTipoMonedas } from '../catalogos/tipoMonedaService'
 import { getTiposContrato } from '../catalogos/tipoContratoService'
 
 const TIPOS   = ['ARRENDAMIENTO', 'COMPRAVENTA', 'USUFRUCTO', 'OTRO']
-const ESTADOS = ['VIGENTE', 'VENCIDO', 'RESCINDIDO', 'PENDIENTE']
+const ESTADOS = ['ACTIVO','FINALIZADO','CANCELADO','EN_MORA']
 
 export default function ContratoModal({ show, onClose, onSaved, contrato }) {
   const [idPropiedad,      setIdProp]       = useState('')
@@ -23,7 +23,7 @@ export default function ContratoModal({ show, onClose, onSaved, contrato }) {
   const [idMoneda,         setIdMoneda]     = useState('')
   const [labelMoneda,      setLabelMoneda]  = useState('')
   const [depositoGarantia, setDeposito]     = useState('')
-  const [estado,           setEstado]       = useState('VIGENTE')
+  const [estado,           setEstado]       = useState('ACTIVO')
   const [documentoUrl,     setDocUrl]       = useState('')
   const [observaciones,    setObs]          = useState('')
   const [loading,          setLoading]      = useState(false)
@@ -32,8 +32,8 @@ export default function ContratoModal({ show, onClose, onSaved, contrato }) {
   useEffect(() => {
     if (!show) return
     if (contrato) {
-      setIdProp(contrato.idPropiedad      ?? ''); setLabelProp('')
-      setIdRes(contrato.idResidente       ?? ''); setLabelRes('')
+      setIdProp(contrato.id_propiedad      ?? ''); setLabelProp('')
+      setIdRes(contrato.id_Residente       ?? ''); setLabelRes('')
       setIdTipo(contrato.idTipoContrato   ?? ''); setLabelTipo('')
       setTipoCont(contrato.tipoContrato   ?? 'ARRENDAMIENTO')
       setFechaIn(contrato.fechaInicio?.substring(0, 10)  ?? '')
@@ -41,7 +41,7 @@ export default function ContratoModal({ show, onClose, onSaved, contrato }) {
       setMonto(contrato.monto             ?? '')
       setIdMoneda(contrato.idMoneda       ?? ''); setLabelMoneda('')
       setDeposito(contrato.depositoGarantia ?? '')
-      setEstado(contrato.estado           ?? 'VIGENTE')
+      setEstado(contrato.estado           ?? 'ACTIVO')
       setDocUrl(contrato.documentoUrl     ?? '')
       setObs(contrato.observaciones       ?? '')
     } else {
@@ -49,7 +49,7 @@ export default function ContratoModal({ show, onClose, onSaved, contrato }) {
       setIdTipo(''); setLabelTipo(''); setTipoCont('ARRENDAMIENTO')
       setFechaIn(''); setFechaFin(''); setMonto('')
       setIdMoneda(''); setLabelMoneda(''); setDeposito('')
-      setEstado('VIGENTE'); setDocUrl(''); setObs('')
+      setEstado('ACTIVO'); setDocUrl(''); setObs('')
     }
     setError(null)
   }, [show]) // eslint-disable-line
@@ -62,19 +62,22 @@ export default function ContratoModal({ show, onClose, onSaved, contrato }) {
     setLoading(true); setError(null)
     try {
       const payload = {
-        id:               contrato ? contrato.id : 0,
-        idPropiedad:      Number(idPropiedad),
-        idResidente:      Number(idResidente),
-        idTipoContrato:   Number(idTipoContrato) || null,
-        tipoContrato,     fechaInicio,
-        fechaFin:         fechaFin || null,
+        id_contrato:               contrato ? contrato.id_contrato : 0,
+        id_propiedad:      Number(idPropiedad),
+        id_residente:      Number(idResidente),
+        id_tipo_contrato:   Number(idTipoContrato) || null,
+        tipo_contrato:       tipoContrato,     
+        fecha_inicio:        fechaInicio,
+        fecha_fin:         fechaFin || null,
         monto:            Number(monto),
-        idMoneda:         Number(idMoneda)         || null,
-        depositoGarantia: Number(depositoGarantia) || null,
-        estado, documentoUrl, observaciones,
+        id_moneda:         Number(idMoneda)         || null,
+        deposito_garantia: Number(depositoGarantia) || null,
+        estado: estado, 
+        documentoUrl, observaciones,
       }
+      console.log(payload);
       contrato
-        ? await updateContrato(contrato.id, payload)
+        ? await updateContrato(contrato.id_contrato, payload)
         : await createContrato(payload)
       onSaved()
     } catch (err) { setError(err.response?.data?.message ?? err.message) }
@@ -105,8 +108,8 @@ export default function ContratoModal({ show, onClose, onSaved, contrato }) {
                   <FkSelector
                     label="Propiedad" required
                     fetchFn={getPropiedades}
-                    getId={p => p.idPropiedad ?? p.id}
-                    getLabel={p => p.nombre ?? p.codigo ?? p.descripcion ?? `#${p.idPropiedad ?? p.id}`}
+                    getId={p => p.id_propiedad ?? p.id}
+                    getLabel={p => p.nombre ?? p.codigo ?? p.descripcion ?? `#${p.id_propiedad ?? p.id}`}
                     value={idPropiedad}
                     displayValue={labelPropiedad}
                     onChange={(id, lbl) => { setIdProp(id); setLabelProp(lbl) }}
@@ -119,10 +122,10 @@ export default function ContratoModal({ show, onClose, onSaved, contrato }) {
                   <FkSelector
                     label="Residente" required
                     fetchFn={getResidentes}
-                    getId={r => r.idResidente ?? r.id}
+                    getId={r => r.id_Residente ?? r.id}
                     getLabel={r => r.nombres
                       ? `${r.nombres} ${r.apellidos ?? ''}`.trim()
-                      : `#${r.idResidente ?? r.id}`}
+                      : `#${r.id_Residente ?? r.id}`}
                     value={idResidente}
                     displayValue={labelResidente}
                     onChange={(id, lbl) => { setIdRes(id); setLabelRes(lbl) }}

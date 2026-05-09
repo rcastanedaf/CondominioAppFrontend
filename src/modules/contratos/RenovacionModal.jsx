@@ -6,7 +6,8 @@ import { getTipoMonedas } from '../catalogos/tipoMonedaService'
 
 export default function RenovacionModal({ show, onClose, onSaved, renovacion }) {
   const [idContrato,       setIdContrato]  = useState('')
-  const [fechaVigencia,    setFechaVig]    = useState('')
+  const [fechaVigenciaIni,    setFechaVigIni]    = useState('')
+  const [fechaVigenciaFin,    setFechaVigFin]    = useState('')
   const [nuevoMonto,       setMonto]       = useState('')
   const [idMoneda,         setIdMoneda]    = useState('')
   const [observaciones,    setObs]         = useState('')
@@ -18,30 +19,36 @@ export default function RenovacionModal({ show, onClose, onSaved, renovacion }) 
   useEffect(() => {
     if (renovacion) {
       setIdContrato(renovacion.idContrato ?? '')
-      setFechaVig(renovacion.fechaNuevaVigencia?.substring(0, 10) ?? '')
+      setFechaVigIni(renovacion.fechaVigenciaIni?.substring(0, 10) ?? '')
+      setFechaVigFin(renovacion.fechaVigenciaFin?.substring(0, 10) ?? '')
       setMonto(renovacion.nuevoMonto ?? '')
       setIdMoneda(renovacion.idMoneda ?? '')
       setObs(renovacion.observaciones ?? '')
     } else {
-      setIdContrato(''); setFechaVig(''); setMonto(''); setIdMoneda(''); setObs('')
+      setIdContrato(''); setFechaVigIni(''); setFechaVigFin(''); setMonto(''); setIdMoneda(''); setObs('')
     }
     setError(null)
   }, [renovacion, show])
 
   const handleSubmit = async () => {
     if (!idContrato)  return setError('ID Contrato es requerido')
-    if (!fechaVigencia) return setError('La fecha de nueva vigencia es requerida')
+    if (!fechaVigenciaIni) return setError('La fecha de nueva de inicio es requerida')
+    if (!fechaVigenciaFin) return setError('La fecha de nueva de fin es requerida')
     setLoading(true); setError(null)
     try {
       const payload = {
-        id: renovacion ? renovacion.id : 0,
-        idContrato: Number(idContrato),
-        fechaNuevaVigencia: fechaVigencia,
-        nuevoMonto: Number(nuevoMonto) || null,
-        idMoneda: Number(idMoneda) || null,
+        id_renovacion: renovacion ? renovacion.id_renovacion : 0,
+        id_contrato: Number(idContrato),
+        FECHA_INICIO: fechaVigenciaIni,
+        FECHA_FIN: fechaVigenciaFin,
+        MONTO_NUEVO: Number(nuevoMonto) || null,
+        id_moneda: Number(idMoneda) || null,
         observaciones,
       }
-      renovacion ? await updateRenovacion(renovacion.id, payload) : await createRenovacion(payload)
+
+      console.log(payload);
+
+      renovacion ? await updateRenovacion(renovacion.id_renovacion, payload) : await createRenovacion(payload)
       onSaved()
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }
@@ -65,8 +72,8 @@ export default function RenovacionModal({ show, onClose, onSaved, renovacion }) 
                   <FkSelector
                     label="Contrato" required
                     fetchFn={getContratos}
-                    getId={c => c.idContrato ?? c.id}
-                    getLabel={c => c.correlativo ?? c.descripcion ?? `#${c.idContrato ?? c.id}`}
+                    getId={c => c.id_contrato ?? c.id_contrato}
+                    getLabel={c => c.correlativo ?? c.correlativo ?? `#${c.id_contrato ?? c.id_contrato}`}
                     value={idContrato}
                     displayValue={labelContrato}
                     onChange={(id, lbl) => { setIdContrato(id); setLabelContrato(lbl) }}
@@ -75,7 +82,8 @@ export default function RenovacionModal({ show, onClose, onSaved, renovacion }) 
                 </div>
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Nueva Vigencia <span className="text-danger">*</span></label>
-                  <input type="date" className="form-control" value={fechaVigencia} onChange={e => setFechaVig(e.target.value)} />
+                  <input type="date" className="form-control" value={fechaVigenciaIni} onChange={e => setFechaVigIni(e.target.value)} />
+                  <input type="date" className="form-control" value={fechaVigenciaFin} onChange={e => setFechaVigFin(e.target.value)} />
                 </div>
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Nuevo Monto</label>
