@@ -1,9 +1,11 @@
 import { useRef }               from 'react'
 import ModuleLayout             from '../../shared/components/ModuleLayout'
-import PagosResidente           from './PagosResidente'        // ← nuevo
-import CuentaCobrarResidente    from './CuentaCobrarResidente' // ← nuevo
+import PagosResidente           from './PagosResidente'     
+import CuentaCobrarResidente    from './CuentaCobrarResidente'
 import CobroMoraTable           from './CobroMoraTable'
 import MultaTable               from './MultaTable'
+import AcuerdoPagoTable from './AcuerdoPagoTable'
+
 
 const CRUD_CARDS = [
   { id: 'pagos',          label: 'Pagos por Residente',  emoji: '💳', desc: 'Historial de pagos por residente',       color: '#0dcaf0' },
@@ -11,7 +13,6 @@ const CRUD_CARDS = [
   { id: 'cobros-mora',    label: 'Cobros de Mora',       emoji: '⚠️', desc: 'Cálculo y gestión de mora',              color: '#dc3545' },
   { id: 'multa',         label: ' Gestion de Multas',               emoji: '🚫', desc: 'Infracciones y multas',                  color: '#6f42c1' },
   { id: 'acuerdos-pago',  label: 'Acuerdos de Pago',    emoji: '🤝', desc: 'Acuerdos y convenios',                   color: '#198754' },
-  { id: 'mora',           label: 'Gestión Mora',         emoji: '📊', desc: 'Reportes de mora',                       color: '#fd7e14' },
 ]
 
 const SUB_VIEWS = {
@@ -24,6 +25,7 @@ const SUB_VIEWS = {
   'cuentas-cobrar': (color) => <CuentaCobrarResidente modColor={color} />,
   'cobros-mora':    (color) => <CobroMoraTable moduleColor={color} />,
   'multa':         (color) => <MultaTable moduleColor={color} />,
+  'acuerdos-pago': (color) => <AcuerdoPagoTable moduleColor={color} />,
 }
 
 export default function PagosModule({ mod, activeSubModule, setActiveSubModule }) {

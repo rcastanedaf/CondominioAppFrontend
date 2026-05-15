@@ -39,6 +39,8 @@ export default function ResidenteModal({ show, onClose, onSaved, residente }) {
     if (!idPersona)    return setError('El ID de persona es requerido')
     if (!idPropiedad)  return setError('El ID de propiedad es requerido')
     if (!fechaIngreso) return setError('La fecha de ingreso es requerida')
+    if (fechaSalida && new Date(fechaSalida) < new Date(fechaIngreso))
+      return setError('La fecha de salida no puede ser anterior a la fecha de ingreso')
     setLoading(true); setError(null)
     try {
       const payload = {

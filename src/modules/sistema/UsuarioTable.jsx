@@ -20,7 +20,7 @@ export default function AsistenciaView({ moduleColor }) {
     setLoading(true); setError(null)
     try {
       const res = await getAsistenciaByEmpleado(id)
-      setRegistros(Array.isArray(res.data) ? res.data : res.data?.data ?? [])
+      setRegistros(res.data?.data ?? [])
     } catch (e) { setError(e.response?.data?.message || e.message); setRegistros([]) }
     finally { setLoading(false) }
   }
@@ -41,8 +41,8 @@ export default function AsistenciaView({ moduleColor }) {
   // Para el FkSelector de empleados necesitamos personas también
   const fetchEmpleadosEnriquecidos = async () => {
     const [eRes, perRes] = await Promise.all([getEmpleados(), getPersonas()])
-    const empleados = Array.isArray(eRes.data) ? eRes.data : eRes.data?.data ?? []
-    const personas  = Array.isArray(perRes.data) ? perRes.data : perRes.data?.data ?? []
+    const empleados = eRes.data?.data ?? []
+    const personas  = perRes.data?.data ?? []
     return {
       data: empleados.map(e => {
         const persona = personas.find(p =>

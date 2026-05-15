@@ -15,7 +15,7 @@ export default function TipoContratoTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getTiposContrato()
-      .then(res => setRows(res.data.data))
+      .then(res => setRows(res.data?.data ?? []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

@@ -15,7 +15,7 @@ export default function PaisTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getPaises()
-      .then(res => setRows(res.data))
+      .then(res => setRows(res.data.data ?? res.data))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }
@@ -28,7 +28,6 @@ export default function PaisTable({ moduleColor }) {
     paginaSegura, totalPaginas, porPagina, setPorPagina, irA, paginas,
   } = usePaginacion(rows)
 
-  useEffect(() => { fetchData() }, [])
 
   const handleEliminar = async (id) => {
     try { await deletePais(id); setConfirmId(null); fetchData() }

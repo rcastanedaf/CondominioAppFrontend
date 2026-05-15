@@ -46,7 +46,7 @@ export default function FacturaDetalle({ modColor = '#dc3545', onRegisterTaskHan
     setLoading(true)
     getFacturas()
       .then(res => {
-        const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+        const lista = res.data ?? []
         setFacturas(lista)
       })
       .catch(err => setError(err.message))
@@ -60,7 +60,7 @@ export default function FacturaDetalle({ modColor = '#dc3545', onRegisterTaskHan
     setLoadingDet(true)
     getDetallesByFactura(fact.idFactura)
       .then(res => {
-        const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+        const lista = res.data ?? []
         setDetalles(lista)
       })
       .catch(() => setDetalles([]))

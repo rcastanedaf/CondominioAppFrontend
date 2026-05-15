@@ -13,7 +13,7 @@ export default function TipoServicioTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getTipoServicios()
-      .then(res => setRows(res.data))
+      .then(res => setRows(res.data ?? []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

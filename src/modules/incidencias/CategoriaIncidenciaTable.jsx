@@ -15,7 +15,7 @@ export default function CategoriaIncidenciaTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getCategorias()
-      .then(res => setRows(res.data?.data ?? res.data ?? []))
+      .then(res => setRows(res.data ?? []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

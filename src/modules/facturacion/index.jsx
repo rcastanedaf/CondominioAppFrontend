@@ -22,12 +22,14 @@ export default function FacturacionModule({ mod, activeSubModule, setActiveSubMo
   { id: 'factura',             label: 'Factura',        emoji: '🏦', desc: 'Gestión de Bancos',               color: '#0d6efd' },
   { id: 'ciclo-factura',       label: 'Ciclo Factura',  emoji: '📉', desc: 'Gestión de Concepto Descuento',   color: '#198754' },
   { id: 'tipo-servicio',       label: 'Tipo de servicio', emoji: '💰', desc: 'Gestión de Metodo de Pago',       color: '#fd7e14' },
+  { id: 'servicio-activo', label: 'Servicios Activos',   emoji: '✅', desc: 'Servicios asignados a propiedades',     color: '#dc3545' },  
 ]
 
   const SUB_MODULE_VIEWS = {
     'factura':              (moduleColor) => <FacturaDetalle moduleColor={moduleColor} />,
     'ciclo-factura': (color) => <CicloFacturacionTable moduleColor={color} />,
     'tipo-servicio':        (color) => <TipoServicioTable moduleColor={color} />,
+    'servicio-activo': (color) => (<div className="text-center py-5 text-muted"><span style={{ fontSize: 32 }}>🚧</span><p className="mt-2">Módulo Servicios Activos — próximamente.</p></div>),
   }
   const renderSubModule = SUB_MODULE_VIEWS[activeSubModule]
 

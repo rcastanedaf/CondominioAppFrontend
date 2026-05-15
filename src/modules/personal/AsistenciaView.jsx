@@ -1,219 +1,160 @@
 import { useState, useEffect } from 'react'
-import { getProveedores, createProveedor, updateProveedor, deleteProveedor } from './proveedorService'
-import { usePaginacion } from '../../shared/hooks/usePaginacion'
-import PaginacionFooter  from '../../shared/components/PaginacionFooter'
+import { getAsistenciaByEmpleado, createAsistencia, registrarSalida } from './asistenciaService'
+import axios from 'axios'
 
-export default function ProveedorTable({ moduleColor }) {
-  const [rows,      setRows]      = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState(null)
-  const [showModal, setShowModal] = useState(false)
-  const [selected,  setSelected]  = useState(null)
-  const [confirmId, setConfirmId] = useState(null)
+const BASE_EMP = 'https://localhost:44352/Empleado'
+const BASE_PER = 'https://localhost:44352/Persona'
 
-  const {
-    datosPagina, datosFiltrados,
-    filtro, setFiltro,
-    paginaSegura, totalPaginas, porPagina, setPorPagina, irA, paginas,
-  } = usePaginacion(rows)
+export default function AsistenciaView({ moduleColor }) {
+  const [empleados,   setEmpleados]   = useState([])
+  const [personas,    setPersonas]    = useState([])
+  const [idEmp,       setIdEmp]       = useState('')
+  const [registros,   setRegistros]   = useState([])
+  const [loading,     setLoading]     = useState(false)
+  const [loadingEmp,  setLoadingEmp]  = useState(true)
+  const [msg,         setMsg]         = useState(null)
 
-  const fetchData = () => {
+  // Cargar lista de empleados al montar
+  useEffect(() => {
+    Promise.all([
+      axios.get(`${BASE_EMP}/get-all`).then(r => r.data?.data ?? []),
+      axios.get(`${BASE_PER}/get-all-persona`).then(r => r.data?.data ?? []), 
+    ]).then(([eRes, pRes]) => {
+      setEmpleados(eRes.data?.data ?? [])
+      setPersonas(pRes.data?.data  ?? [])
+    }).catch(e => setMsg({ type: 'danger', text: e.message }))
+      .finally(() => setLoadingEmp(false))
+  }, [])
+
+  const cargarAsistencia = (id) => {
+    if (!id) return
     setLoading(true)
-    getProveedores()
-      .then(res => setRows(Array.isArray(res.data) ? res.data : res.data?.data ?? []))
-      .catch(err => setError(err.message))
+    getAsistenciaByEmpleado(id)
+      .then(res => setRegistros(res.data?.data ?? []))
+      .catch(e => setMsg({ type: 'danger', text: e.message }))
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchData() }, [])
-
-  const handleEliminar = async (id) => {
-    try { await deleteProveedor(id); setConfirmId(null); fetchData() }
-    catch (err) { alert('Error al eliminar: ' + err.message) }
+  const handleSeleccion = (e) => {
+    const id = e.target.value
+    setIdEmp(id)
+    setRegistros([])
+    if (id) cargarAsistencia(id)
   }
 
-  if (loading) return <div className="text-center py-5 text-muted"><div className="spinner-border spinner-border-sm me-2" />Cargando proveedores...</div>
-  if (error)   return <div className="alert alert-danger py-2"><i className="bi bi-exclamation-circle me-2" />{error}</div>
-
-  return (
-    <>
-      <PaginacionFooter
-        titulo="Proveedores Externos" icono="bi-truck" labelBoton="Nuevo Proveedor"
-        onNuevo={() => { setSelected(null); setShowModal(true) }} moduleColor={moduleColor}
-        filtro={filtro} setFiltro={setFiltro} placeholder="Filtrar proveedores..."
-        paginaSegura={paginaSegura} totalPaginas={totalPaginas}
-        porPagina={porPagina} setPorPagina={setPorPagina} irA={irA} paginas={paginas}
-        totalDatos={datosFiltrados.length} label="proveedores"
-      />
-      <div className="cms-table-wrap">
-        <table className="table table-hover cms-table">
-          <thead>
-            <tr>
-              <th>#</th><th>Empresa</th><th>NIT</th><th>Rubro</th>
-              <th>Teléfono</th><th>Email</th><th>Contacto</th><th>Estado</th><th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {datosPagina.length === 0 ? (
-              <tr><td colSpan={9} className="text-center text-muted py-4"><i className="bi bi-inbox me-2" />Sin proveedores registrados</td></tr>
-            ) : datosPagina.map((r, i) => (
-              <tr key={r.id ?? i}>
-                <td className="text-muted">{r.id}</td>
-                <td className="fw-semibold">{r.nombre_Empresa ?? r.nombreEmpresa}</td>
-                <td className="text-muted small">{r.nit ?? '—'}</td>
-                <td>{r.rubro ?? '—'}</td>
-                <td>{r.telefono ?? '—'}</td>
-                <td className="text-muted small">{r.email ?? '—'}</td>
-                <td className="text-muted small">{r.contacto_Nombre ?? r.contactoNombre ?? '—'}</td>
-                <td>
-                  <span className={`badge ${r.activo === 1 ? 'text-bg-success' : 'text-bg-secondary'}`}>
-                    {r.activo === 1 ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td>
-                <td>
-                  <div className="d-flex gap-1">
-                    <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(r); setShowModal(true) }}>
-                      <i className="bi bi-pencil me-1" style={{ fontSize: 11 }} />Editar
-                    </button>
-                    {confirmId === r.id ? (
-                      <>
-                        <span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(r.id)}>Sí</button>
-                        <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button>
-                      </>
-                    ) : (
-                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(r.id)}>
-                        <i className="bi bi-trash me-1" style={{ fontSize: 11 }} />Eliminar
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <PaginacionFooter
-        paginaSegura={paginaSegura} totalPaginas={totalPaginas}
-        porPagina={porPagina} setPorPagina={setPorPagina} irA={irA} paginas={paginas}
-        totalDatos={datosFiltrados.length} label="proveedores" moduleColor={moduleColor}
-      />
-      {showModal && (
-        <ProveedorModal
-          proveedor={selected}
-          onClose={() => setShowModal(false)}
-          onSaved={() => { setShowModal(false); fetchData() }}
-        />
-      )}
-    </>
-  )
-}
-
-function ProveedorModal({ proveedor, onClose, onSaved }) {
-  const [nombreEmpresa,    setNombre]    = useState(proveedor?.nombre_Empresa ?? proveedor?.nombreEmpresa ?? '')
-  const [nit,              setNit]       = useState(proveedor?.nit ?? '')
-  const [rubro,            setRubro]     = useState(proveedor?.rubro ?? '')
-  const [telefono,         setTelefono]  = useState(proveedor?.telefono ?? '')
-  const [email,            setEmail]     = useState(proveedor?.email ?? '')
-  const [contactoNombre,   setContacto]  = useState(proveedor?.contacto_Nombre ?? proveedor?.contactoNombre ?? '')
-  const [contactoTelefono, setConTel]    = useState(proveedor?.contacto_Telefono ?? proveedor?.contactoTelefono ?? '')
-  const [direccion,        setDireccion] = useState(proveedor?.direccion ?? '')
-  const [activo,           setActivo]    = useState(proveedor?.activo ?? 1)
-  const [observaciones,    setObs]       = useState(proveedor?.observaciones ?? '')
-  const [loading,          setLoading]   = useState(false)
-  const [error,            setError]     = useState(null)
-
-  const handleSubmit = async () => {
-    if (!nombreEmpresa.trim()) { setError('El nombre de la empresa es requerido'); return }
-    setLoading(true); setError(null)
+  const handleRegistrarEntrada = async () => {
+    if (!idEmp) return setMsg({ type: 'warning', text: 'Selecciona un empleado' })
     try {
-      const payload = {
-        Nombre_Empresa:    nombreEmpresa,
-        Nit:               nit              || null,
-        Rubro:             rubro            || null,
-        Telefono:          telefono         || null,
-        Email:             email            || null,
-        Contacto_Nombre:   contactoNombre   || null,
-        Contacto_Telefono: contactoTelefono || null,
-        Direccion:         direccion        || null,
-        Activo:            Number(activo),
-        Observaciones:     observaciones    || null,
-      }
-      proveedor
-        ? await updateProveedor(proveedor.id, { ...payload, Id: proveedor.id })
-        : await createProveedor(payload)
-      onSaved()
-    } catch (e) { setError(e.response?.data?.message || e.message) }
-    finally { setLoading(false) }
+      await createAsistencia({ Id_Empleado: Number(idEmp) })
+      setMsg({ type: 'success', text: 'Entrada registrada' })
+      cargarAsistencia(idEmp)
+    } catch (e) {
+      setMsg({ type: 'danger', text: e.response?.data?.message ?? e.message })
+    }
+  }
+
+  const handleRegistrarSalida = async (idAsistencia) => {
+    try {
+      await registrarSalida(idAsistencia)
+      setMsg({ type: 'success', text: 'Salida registrada' })
+      cargarAsistencia(idEmp)
+    } catch (e) {
+      setMsg({ type: 'danger', text: e.response?.data?.message ?? e.message })
+    }
+  }
+
+  const nombreEmpleado = (emp) => {
+    const per = personas.find(p =>
+      (p.id_Persona ?? p.idPersona) === (emp.id_Persona ?? emp.idPersona))
+    return per ? `${per.nombres ?? ''} ${per.apellidos ?? ''}`.trim() : `Empleado #${emp.id_Empleado ?? emp.idEmpleado}`
   }
 
   return (
-    <>
-      <div className="modal-backdrop fade show" onClick={onClose} />
-      <div className="modal fade show d-block" tabIndex="-1">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">{proveedor ? '✏️ Editar Proveedor' : '🚛 Nuevo Proveedor'}</h5>
-              <button className="btn-close" onClick={onClose} />
-            </div>
-            <div className="modal-body">
-              {error && <div className="alert alert-danger py-2 mb-3"><i className="bi bi-exclamation-circle me-2" />{error}</div>}
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-semibold">Nombre de Empresa <span className="text-danger">*</span></label>
-                  <input className="form-control" value={nombreEmpresa} onChange={e => setNombre(e.target.value)} autoFocus />
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label fw-semibold">NIT</label>
-                  <input className="form-control" value={nit} onChange={e => setNit(e.target.value)} />
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label fw-semibold">Rubro</label>
-                  <input className="form-control" value={rubro} onChange={e => setRubro(e.target.value)} placeholder="Plomería, Eléctrica..." />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Teléfono</label>
-                  <input className="form-control" value={telefono} onChange={e => setTelefono(e.target.value)} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Email</label>
-                  <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Estado</label>
-                  <select className="form-select" value={activo} onChange={e => setActivo(e.target.value)}>
-                    <option value={1}>Activo</option>
-                    <option value={0}>Inactivo</option>
+    <div className="p-3">
+      {msg && (
+        <div className={`alert alert-${msg.type} alert-dismissible py-2`}>
+          {msg.text}
+          <button className="btn-close" onClick={() => setMsg(null)} />
+        </div>
+      )}
+
+      <div className="card border-0 shadow-sm mb-3">
+        <div className="card-body">
+          <h6 className="fw-semibold mb-3">
+            <i className="bi bi-person-check me-2" style={{ color: moduleColor }} />
+            Control de Asistencia
+          </h6>
+          <div className="row g-3 align-items-end">
+            <div className="col-12 col-md-5">
+              <label className="form-label fw-semibold small">Seleccionar Empleado</label>
+              {loadingEmp
+                ? <div className="text-muted small">Cargando empleados...</div>
+                : (
+                  <select className="form-select form-select-sm" value={idEmp} onChange={handleSeleccion}>
+                    <option value="">-- Seleccionar --</option>
+                    {empleados.map(e => {
+                      const id = e.id_Empleado ?? e.idEmpleado
+                      return <option key={id} value={id}>{nombreEmpleado(e)}</option>
+                    })}
                   </select>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-semibold">Nombre del Contacto</label>
-                  <input className="form-control" value={contactoNombre} onChange={e => setContacto(e.target.value)} />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-semibold">Teléfono del Contacto</label>
-                  <input className="form-control" value={contactoTelefono} onChange={e => setConTel(e.target.value)} />
-                </div>
-                <div className="col-12">
-                  <label className="form-label fw-semibold">Dirección</label>
-                  <input className="form-control" value={direccion} onChange={e => setDireccion(e.target.value)} />
-                </div>
-                <div className="col-12">
-                  <label className="form-label fw-semibold">Observaciones</label>
-                  <textarea className="form-control" rows={2} value={observaciones} onChange={e => setObs(e.target.value)} />
-                </div>
-              </div>
+                )
+              }
             </div>
-            <div className="modal-footer">
-              <button className="btn btn-outline-secondary" onClick={onClose} disabled={loading}>Cancelar</button>
-              <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-                {loading ? <><span className="spinner-border spinner-border-sm me-2" />Guardando...</> : proveedor ? 'Guardar cambios' : 'Crear Proveedor'}
+            <div className="col-auto">
+              <button className="btn btn-sm text-white" style={{ background: moduleColor }}
+                onClick={handleRegistrarEntrada} disabled={!idEmp}>
+                <i className="bi bi-box-arrow-in-right me-1" /> Registrar Entrada
               </button>
             </div>
           </div>
         </div>
       </div>
-    </>
+
+      {loading && <div className="text-center py-4"><div className="spinner-border spinner-border-sm" /></div>}
+
+      {!loading && idEmp && (
+        <div className="table-responsive">
+          <table className="table table-sm table-hover align-middle">
+            <thead className="table-light">
+              <tr>
+                <th>ID</th><th>Fecha Entrada</th><th>Hora Entrada</th>
+                <th>Hora Salida</th><th>Estado</th><th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {registros.length === 0 ? (
+                <tr><td colSpan={6} className="text-center text-muted py-4">Sin registros de asistencia</td></tr>
+              ) : registros.map(r => {
+                const id      = r.id_Asistencia ?? r.idAsistencia
+                const entrada = r.hora_Entrada  ?? r.horaEntrada  ?? '—'
+                const salida  = r.hora_Salida   ?? r.horaSalida
+                const fecha   = r.fecha         ?? '—'
+                return (
+                  <tr key={id}>
+                    <td>{id}</td>
+                    <td>{String(fecha).slice(0, 10)}</td>
+                    <td>{entrada}</td>
+                    <td>{salida ?? <span className="text-muted">Pendiente</span>}</td>
+                    <td>
+                      <span className={`badge ${salida ? 'bg-success' : 'bg-warning text-dark'}`}>
+                        {salida ? 'Completo' : 'En curso'}
+                      </span>
+                    </td>
+                    <td>
+                      {!salida && (
+                        <button className="btn btn-xs btn-outline-danger btn-sm"
+                          onClick={() => handleRegistrarSalida(id)}>
+                          <i className="bi bi-box-arrow-right me-1" />Salida
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   )
 }

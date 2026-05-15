@@ -1,5 +1,14 @@
 export const MODULES = [
   {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: 'bi-speedometer2',
+    color: '#0d6efd',
+    submodules: [],
+    tasks: [],
+  },
+
+  {
     id: 'catalogos',
     label: 'Catálogos',
     icon: 'bi-journals',
@@ -67,7 +76,7 @@ export const MODULES = [
       { id: 'factura', label: 'Facturas' },
       { id: 'ciclo-factura', label: 'Ciclos de Facturación' },
       { id: 'tipo-servicio', label: 'Tipo de Servicio' },
-      { id: 'Servicio', label: 'Servicios' },
+      { id: 'servicio-activo', label: 'Servicios Activos' },
     ],
     tasks: ['Nueva factura', 'Editar factura', 'Anular factura', 'Enviar por correo', 'Imprimir', 'Generar ciclo'],
   },

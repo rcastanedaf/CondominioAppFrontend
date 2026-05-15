@@ -87,13 +87,9 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
     setLoadingRes(true)
     Promise.all([getResidentes(), getPersonas()])
       .then(([resRes, perRes]) => {
-        const listaResidentes = Array.isArray(resRes.data)
-          ? resRes.data
-          : resRes.data?.data ?? []
+        const listaResidentes = resRes.data?.data ?? []
 
-        const listaPersonas = Array.isArray(perRes.data)
-          ? perRes.data
-          : perRes.data?.data ?? []
+        const listaPersonas = perRes.data?.data ?? []
 
         const enriched = listaResidentes.map(r => {
           const persona = listaPersonas.find(
@@ -135,7 +131,7 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
     setErrorPag(null)
     getPagosByResidente(resSeleccionado.id)
       .then(res => {
-        const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+        const lista = res.data?.data ?? res.data  ?? []
         setPagos(lista.map(normalizePago))  // ✅ usa helper centralizado
       })
       .catch(err => setErrorPag(err.message))
@@ -170,7 +166,7 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
     if (resSeleccionado) {
       getPagosByResidente(resSeleccionado.id)
         .then(res => {
-          const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+          const lista = Array.isArray(res.data.data) ? res.data : res.data?.data ?? []
           setPagos(lista.map(normalizePago))  // ✅ usa helper centralizado
         })
         .catch(err => setErrorPag(err.message))

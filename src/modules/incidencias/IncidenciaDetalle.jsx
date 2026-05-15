@@ -35,7 +35,7 @@ export default function IncidenciaDetalle({ modColor = '#dc3545', onRegisterTask
   const fetchIncidencias = () => {
     setLoading(true)
     getIncidencias()
-      .then(res => setIncidencias(res.data?.data ?? res.data ?? []))
+      .then(res => setIncidencias(res.data ?? []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }
@@ -47,8 +47,8 @@ export default function IncidenciaDetalle({ modColor = '#dc3545', onRegisterTask
   getSeguimientos(inc.idIncidencia)
     .then(res => {
       console.log('URL llamada con idIncidencia:', inc.idIncidencia)
-      console.log('RAW res.data:', res.data)
-      setSeguimientos(res.data?.data ?? res.data ?? [])
+      console.log('RAW res.data:', res.data?.data ?? [])
+      setSeguimientos(res.data ?? [])
     })
     .catch((err) => {
       console.log('ERROR:', err)

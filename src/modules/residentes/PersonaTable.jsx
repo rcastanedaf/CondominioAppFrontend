@@ -22,7 +22,7 @@ export default function PersonaTable({ moduleColor }) {
     setLoading(true)
     getPersonas()
       .then(res => {
-        const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+        const lista = res.data?.data ?? []
         console.log('primer registro raw:', lista[0]) 
         const normalized = lista.map(p => ({
           id:                  p.id_Persona          ?? p.Id_Persona          ?? p.idPersona,

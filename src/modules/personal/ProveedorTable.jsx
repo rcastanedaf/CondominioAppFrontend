@@ -20,7 +20,7 @@ export default function ProveedorTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getProveedores()
-      .then(res => setRows(Array.isArray(res.data) ? res.data : res.data?.data ?? []))
+      .then(res => setRows(res.data?.data ?? []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

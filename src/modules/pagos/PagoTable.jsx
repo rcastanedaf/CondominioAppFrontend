@@ -15,7 +15,7 @@ export default function PagoTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getPagos()
-      .then(res => setRows(res.data))
+      .then(res => setRows(res.data?.data ?? []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }
@@ -43,12 +43,12 @@ export default function PagoTable({ moduleColor }) {
           <tbody>
             {rows.map((row, i) => (
               <tr key={row.id ?? i}>
-                <td className="text-muted">{row.id}</td>
-                <td>{row.idFactura}</td>
-                <td className="fw-semibold">{row.numeroRecibo}</td>
-                <td>{row.fechaPago?.substring(0, 10)}</td>
-                <td className="fw-semibold">Q {Number(row.montoPagado).toFixed(2)}</td>
-                <td><span className={`badge text-bg-${ESTADO_COLOR[row.estado] || 'secondary'}`}>{row.estado}</span></td>
+                <td className="text-muted">{row.IdPago}</td>
+                <td>{row.IdFactura}</td>
+                <td className="fw-semibold">{row.NumeroRecibo}</td>
+                <td>{row.FechaPago?.substring(0, 10)}</td>
+                <td className="fw-semibold">Q {Number(row.MontoPagado).toFixed(2)}</td>
+                <td><span className={`badge text-bg-${ESTADO_COLOR[row.Estado] || 'secondary'}`}>{row.Estado}</span></td>
                 <td>
                   <div className="d-flex gap-1">
                     <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(row); setShowModal(true) }}>

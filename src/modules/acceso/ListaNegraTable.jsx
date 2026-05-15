@@ -23,8 +23,8 @@ export default function ListaNegraTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getListaNegra(), getPersonas()])
       .then(([lRes, perRes]) => {
-        const lista   = Array.isArray(lRes.data)   ? lRes.data   : lRes.data?.data   ?? []
-        const personas = Array.isArray(perRes.data) ? perRes.data : perRes.data?.data ?? []
+        const lista   = Array.isArray(lRes.data.data)   ? lRes.data.data   : lRes.data?.data   ?? []
+        const personas = Array.isArray(perRes.data.data) ? perRes.data.data : perRes.data?.data ?? []
 
         const enriched = lista.map(l => {
           const persona = personas.find(p =>

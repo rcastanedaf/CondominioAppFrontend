@@ -15,7 +15,7 @@ export default function CuentaCobrarTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getCuentasCobrar()
-      .then(res => setRows(res.data))
+      .then(res => setRows(res.data.data))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

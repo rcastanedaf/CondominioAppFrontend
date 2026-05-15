@@ -14,7 +14,7 @@ export default function LogAuditoriaTable({ moduleColor }) {
 
   const fetchData = () => {
     setLoading(true)
-    getLogs(top).then(r => setRows(r.data)).catch(e => setError(e.message)).finally(() => setLoading(false))
+    getLogs(top).then(r => setRows(r.data.data ?? [])).catch(e => setError(e.message)).finally(() => setLoading(false))
   }
   useEffect(() => { fetchData() }, [top])
 

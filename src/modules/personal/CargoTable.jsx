@@ -27,9 +27,9 @@ export default function EmpleadoTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getEmpleados(), getPersonas(), getCargos()])
       .then(([eRes, perRes, cRes]) => {
-        const empleados = Array.isArray(eRes.data)   ? eRes.data   : eRes.data?.data   ?? []
-        const personas  = Array.isArray(perRes.data) ? perRes.data : perRes.data?.data ?? []
-        const cargos    = Array.isArray(cRes.data)   ? cRes.data   : cRes.data?.data   ?? []
+        const empleados = eRes.data?.data ?? []
+        const personas  = perRes.data?.data ?? []
+        const cargos    = cRes.data?.data ?? []
 
         const enriched = empleados.map(e => {
           const persona = personas.find(p =>

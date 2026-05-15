@@ -27,9 +27,9 @@ export default function RegistroAccesoTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getRegistros(), getPropiedades(), getMotivosVisita()])
       .then(([rRes, pRes, mvRes]) => {
-        const registros   = Array.isArray(rRes.data)  ? rRes.data  : rRes.data?.data  ?? []
-        const propiedades = Array.isArray(pRes.data)  ? pRes.data  : pRes.data?.data  ?? []
-        const motivos     = Array.isArray(mvRes.data) ? mvRes.data : mvRes.data?.data ?? []
+        const registros   = rRes.data?.data ?? []
+        const propiedades = pRes.data?.data ?? []
+        const motivos     = mvRes.data?.data ?? []
 
         const enriched = registros.map(r => {
           const propiedad = propiedades.find(p =>

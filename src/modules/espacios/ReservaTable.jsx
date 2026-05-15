@@ -27,11 +27,11 @@ export default function ReservaTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getReservas(), getEspacios(), getResidentes(), getPersonas(), getPropiedades()])
       .then(([rRes, eRes, resRes, perRes, pRes]) => {
-        const reservas    = Array.isArray(rRes.data)   ? rRes.data   : rRes.data?.data   ?? []
-        const espacios    = Array.isArray(eRes.data)   ? eRes.data   : eRes.data?.data   ?? []
-        const residentes  = Array.isArray(resRes.data) ? resRes.data : resRes.data?.data ?? []
-        const personas    = Array.isArray(perRes.data) ? perRes.data : perRes.data?.data ?? []
-        const propiedades = Array.isArray(pRes.data)   ? pRes.data   : pRes.data?.data   ?? []
+        const reservas    = rRes.data?.data ?? []
+        const espacios    = eRes.data?.data ?? []
+        const residentes  = resRes.data?.data ?? []
+        const personas    = perRes.data?.data ?? []
+        const propiedades = pRes.data?.data ?? []
 
         const enriched = reservas.map(rv => {
           const espacio   = espacios.find(e => (e.id ?? e.idEspacio) === (rv.id_Espacio ?? rv.idEspacio))

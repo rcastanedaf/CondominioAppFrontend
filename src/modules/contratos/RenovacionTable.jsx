@@ -24,23 +24,33 @@ export default function RenovacionTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getRenovaciones(), getContratos(), getPropiedades()])
       .then(([rRes, cRes, pRes]) => {
-        const renovaciones = Array.isArray(rRes.data) ? rRes.data : rRes.data?.data ?? []
-        const contratos    = Array.isArray(cRes.data) ? cRes.data : cRes.data?.data ?? []
-        const propiedades  = Array.isArray(pRes.data) ? pRes.data : pRes.data?.data ?? []
+        const renovaciones = rRes.data?.data ?? []
+        const contratos    = Array.isArray(cRes.data)   ? cRes.data   : cRes.data?.data   ?? []
+        const propiedades  = pRes.data.data  ?? pRes.data   ?? pRes.data?.data   ?? []
 
         const enriched = renovaciones.map(r => {
-          const contrato  = contratos.find(c => (c.id ?? c.idContrato) === (r.idContrato ?? r.id_Contrato))
-          const propiedad = contrato
-            ? propiedades.find(p => (p.id_propiedad ?? p.idPropiedad) === (contrato.idPropiedad ?? contrato.id_Propiedad))
-            : null
+        // Dapper serializa ID_CONTRATO → idContrato con la configuración actual
+        const idContrato = r.idContrato ?? r.id_Contrato
+        const contrato = contratos.find(c =>
+          (c.idContrato ?? c.id_Contrato ?? c.id) === idContrato
+        )
+        const idPropiedad = contrato
+          ? (contrato.idPropiedad ?? contrato.id_Propiedad)
+          : null
+        const propiedad = idPropiedad
+          ? propiedades.find(p => (p.idPropiedad ?? p.id_Propiedad) === idPropiedad)
+          : null
+        const codigoProp = propiedad
+          ? (propiedad.codigoPropiedad ?? propiedad.codigo_Propiedad ?? propiedad.codigo ?? `#${idPropiedad}`)
+          : `Prop. #${idPropiedad ?? '—'}`
 
-          const labelContrato = contrato
-            ? `Contrato #${contrato.id}${propiedad ? ` — ${propiedad.codigo}` : ''}`
-            : `Contrato #${r.idContrato}`
-
-          return { ...r, _labelContrato: labelContrato }
+        return {
+          ...r,
+          _labelContrato: `Contrato #${idContrato ?? '—'} — ${codigoProp}`,
+          _estadoContrato: contrato?.estado ?? contrato?.Estado ?? '—',
+          _tipoContrato:   contrato?.tipoContrato ?? contrato?.tipo_Contrato ?? '—',
+        }
         })
-
         setRows(enriched)
       })
       .catch(err => setError(err.message))
@@ -84,13 +94,21 @@ export default function RenovacionTable({ moduleColor }) {
             {datosPagina.length === 0 ? (
               <tr><td colSpan={6} className="text-center text-muted py-4"><i className="bi bi-inbox me-2" />Sin renovaciones registradas</td></tr>
             ) : datosPagina.map((row, i) => (
-              <tr key={row.id_renovacion ?? i}>
-                <td className="text-muted">{row.id_renovacion}</td>
-                <td className="fw-semibold">{row.id_contrato}</td>
-                <td>{row.fechA_INICIO?.substring(0, 10)}- {row.fechA_FIN?.substring(0, 10)}</td>
-                <td className="fw-semibold">Q {Number(row.montO_NUEVO || 0).toFixed(2)}</td>
-                <td className="text-muted">{row.fechaRegistro?.substring(0, 10)}</td>
+              <tr key={row.id_renovacion ?? row.id_Renovacion  ?? i+1}>
+                <td>{r.idRenovacion   ?? r.id_Renovacion  ?? i+1}</td>
+                <td>{r._labelContrato}</td>
+                <td>{(r.fechaInicio   ?? r.fecha_Inicio   ?? '').toString().slice(0,10)}</td>
+                <td>{(r.fechaFin      ?? r.fecha_Fin      ?? '—').toString?.()?.slice(0,10) ?? '—'}</td>
+                <td>Q {Number(r.montoNuevo ?? r.monto_Nuevo ?? 0).toFixed(2)}</td>
                 <td>
+                  <span className={`badge ${
+                    (r.estado ?? '').toUpperCase() === 'ACTIVO'     ? 'bg-success' :
+                    (r.estado ?? '').toUpperCase() === 'FINALIZADO' ? 'bg-secondary' : 'bg-danger'
+                  }`}>
+                    {r.estado ?? '—'}
+                  </span>
+                </td>
+                  <td>
                   <div className="d-flex gap-1">
                     <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(row); setShowModal(true) }}>
                       <i className="bi bi-pencil me-1" style={{ fontSize: 11 }} />Editar

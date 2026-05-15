@@ -42,7 +42,7 @@ function BancoTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getBancos()
-      .then(res => setRows(res.data))
+      .then(res => setRows(res.data.data ?? []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

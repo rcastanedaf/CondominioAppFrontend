@@ -13,7 +13,7 @@ export default function CicloFacturacionTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getCiclos()
-      .then(res => setRows(res.data))
+      .then(res => setRows(res.data ?? []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

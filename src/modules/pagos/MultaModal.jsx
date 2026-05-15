@@ -28,10 +28,11 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
       setDesc(multa.descripcion ?? '')
       setMonto(multa.monto ?? '')
       setFechaInf(multa.fecha_Infraccion?.substring(0, 10) ?? '')
-      setFechaVenc(multa.fecha_Vencimiento?.substring(0, 10) ?? '')
+      setFechaVenc(multa.fecha_Vencimiento?.substring(0, 10) ?? '')      
       setEstado(multa.estado ?? 'PENDIENTE')
       setEvidencia(multa.evidencia ?? '')
       setObs(multa.observaciones ?? '')
+
     } else {
       setIdRes(''); setLabelRes('')
       setIdProp(''); setLabelProp('')
@@ -46,29 +47,34 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
   const handleSubmit = async () => {
   if (!idResidente)        return setError('El residente es requerido')
   if (!descripcion.trim()) return setError('La descripción es requerida')
-  if (!monto)              return setError('El monto es requerido')
-  if (!fechaInfraccion)    return setError('La fecha de infracción es requerida')
+  if (descripcion.trim().length < 5) return setError('La descripción debe tener al menos 5 caracteres')
+  if (!monto || Number(monto) <= 0)  return setError('El monto debe ser mayor a 0')
+  if (!fechaInfraccion)   return setError('La fecha de infracción es requerida')
+  if (!fechaVencimiento)  return setError('La fecha de vencimiento es requerida')
+  if (new Date(fechaVencimiento) < new Date(fechaInfraccion))
+    return setError('La fecha de vencimiento no puede ser anterior a la fecha de infracción')
+
   setLoading(true); setError(null)
   try {
     const payload = {
-      Id_Multa:           multa ? multa.id_Multa : undefined,
       Id_Residente:       Number(idResidente),
-      Id_Propiedad:       Number(idPropiedad) || 0,
-      Id_Tipo_Infraccion: 0,
+      Id_Propiedad:       Number(idPropiedad) || undefined,
+      Id_Tipo_Infraccion: 1,                       
       Descripcion:        descripcion,
-      Monto:              Number(monto),
+      Monto_Multa:        Number(monto),          
       Fecha_Infraccion:   fechaInfraccion,
-      Fecha_Vencimiento:  fechaVencimiento || fechaInfraccion,
+      Fecha_Vencimiento:  fechaVencimiento,
       Estado:             estado,
-      Evidencia:          evidenciaUrl || '',
-      Id_Factura:         0,
-      Id_Apelacion:       0,
-      Id_Emitida:         1,
-      Id_Aprobada:        0,
-      Observaciones:      observaciones || '',
-      Fecha_Registro:     new Date().toISOString(),
+      Evidencia_Url:      evidenciaUrl || undefined,
+      Observaciones:      observaciones || undefined,
     }
-    multa ? await updateMulta(multa.id_Multa, payload) : await createMulta(payload)
+    // En update agregamos el campo de ID
+    if (multa) {
+      payload.Id_Multa = multa.id_Multa
+      await updateMulta(multa.id_Multa, payload)
+    } else {
+      await createMulta(payload)
+    }
     onSaved()
   } catch (err) {
     setError(err.response?.data?.message ?? err.message)
@@ -167,8 +173,13 @@ export default function MultaModal({ show, onClose, onSaved, multa }) {
                 {/* Fecha Vencimiento */}
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Fecha Vencimiento</label>
-                  <input type="date" className="form-control"
-                    value={fechaVencimiento} onChange={e => setFechaVenc(e.target.value)} />
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={fechaVencimiento}
+                    min={fechaInfraccion}
+                    onChange={e => setFechaVenc(e.target.value)}
+                  />
                 </div>
 
                 {/* Estado */}

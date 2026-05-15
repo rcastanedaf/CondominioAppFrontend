@@ -15,7 +15,7 @@ export default function TipoMonedaTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getTipoMonedas()
-      .then(res => setRows(res.data))
+      .then(res => setRows(res.data.data))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

@@ -3,12 +3,15 @@ import EmpleadoTable    from './EmpleadoTable'
 import CargoTable       from './CargoTable'
 import ProveedorTable   from './ProveedorTable'
 import AsistenciaView   from './AsistenciaView'
+import HorarioTurnoTable from './HorarioTurnoTable'
+
 
 const CRUD_CARDS = [
   { id: 'empleados',   label: 'Empleados',          emoji: '👷', desc: 'Gestión de personal del condominio', color: '#20c997' },
   { id: 'cargos',      label: 'Cargos',              emoji: '🏷️', desc: 'Catálogo de cargos y salarios',     color: '#0d6efd' },
   { id: 'asistencia',  label: 'Asistencia',          emoji: '📋', desc: 'Control de entrada y salida',        color: '#fd7e14' },
   { id: 'proveedores', label: 'Proveedores Externos', emoji: '🚛', desc: 'Proveedores y contratistas',        color: '#6f42c1' },
+  { id: 'horarios', label: 'Horarios y Turnos', emoji: '🕛', desc: 'Gestión de turnos del personal', color: '#0d6efd' },
 ]
 
 const SUB_VIEWS = {
@@ -16,6 +19,7 @@ const SUB_VIEWS = {
   'cargos':      (color) => <CargoTable      moduleColor={color} />,
   'asistencia':  (color) => <AsistenciaView  moduleColor={color} />,
   'proveedores': (color) => <ProveedorTable  moduleColor={color} />,
+  'horarios': (color) => <HorarioTurnoTable moduleColor={color} />,
 }
 
 export default function PersonalModule({ mod, activeSubModule, setActiveSubModule }) {

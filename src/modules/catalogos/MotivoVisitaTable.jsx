@@ -15,7 +15,7 @@ export default function MotivoVisitaTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getMotivosVisita()
-      .then(res => setRows(res.data.data))
+      .then(res => setRows(res.data?.data ?? []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

@@ -27,11 +27,11 @@ export default function VisitaAutorizadaTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getVisitas(), getResidentes(), getPersonas(), getPropiedades(), getMotivosVisita()])
       .then(([vRes, rRes, perRes, pRes, mvRes]) => {
-        const visitas     = Array.isArray(vRes.data)   ? vRes.data   : vRes.data?.data   ?? []
-        const residentes  = Array.isArray(rRes.data)   ? rRes.data   : rRes.data?.data   ?? []
-        const personas    = Array.isArray(perRes.data) ? perRes.data : perRes.data?.data ?? []
-        const propiedades = Array.isArray(pRes.data)   ? pRes.data   : pRes.data?.data   ?? []
-        const motivos     = Array.isArray(mvRes.data)  ? mvRes.data  : mvRes.data?.data  ?? []
+        const visitas     = vRes.data?.data   ?? []
+        const residentes  = rRes.data?.data   ?? []
+        const personas    = perRes.data?.data ?? []
+        const propiedades = pRes.data?.data   ?? []
+        const motivos     = mvRes.data?.data  ?? []
 
         const enriched = visitas.map(v => {
           const residente = residentes.find(r =>
@@ -148,6 +148,8 @@ function VisitaModal({ visita, onClose, onSaved }) {
   const handleSubmit = async () => {
     if (!nombreVisitante.trim()) { setError('El nombre del visitante es requerido'); return }
     if (!idResidente)            { setError('El residente es requerido'); return }
+    if (fechaDesde && fechaHasta && new Date(fechaHasta) < new Date(fechaDesde))
+      return setError('La fecha de fin no puede ser anterior a la fecha de inicio')
     setLoading(true); setError(null)
     try {
       const payload = {

@@ -24,36 +24,35 @@ export default function MultaTable({ moduleColor }) {
   } = usePaginacion(rows)
 
   const fetchData = () => {
-    setLoading(true)
-    Promise.all([getMultas(), getResidentes(), getPersonas(), getPropiedades()])
-      .then(([mRes, rRes, perRes, pRes]) => {
-        const multas      = Array.isArray(mRes.data)   ? mRes.data   : mRes.data?.data   ?? []
-        const residentes  = Array.isArray(rRes.data)   ? rRes.data   : rRes.data?.data   ?? []
-        const personas    = Array.isArray(perRes.data) ? perRes.data : perRes.data?.data ?? []
-        const propiedades = Array.isArray(pRes.data)   ? pRes.data   : pRes.data?.data   ?? []
+  setLoading(true)
+  Promise.all([getMultas(), getResidentes(), getPersonas(), getPropiedades()])
+    .then(([mRes, rRes, perRes, pRes]) => {
+      const multas      = mRes.data?.data   ?? []
+      const residentes  = rRes.data?.data   ?? []
+      const personas    = perRes.data?.data ?? []
+      const propiedades = pRes.data?.data   ?? []
 
-        const enriched = multas.map(m => {
-          const residente = residentes.find(r =>
-            (r.id_Residente ?? r.idResidente) === (m.id_Residente ?? m.idResidente))
-          const persona   = personas.find(p =>
-            (p.id_Persona ?? p.idPersona) === (residente?.id_Persona ?? residente?.idPersona))
-          const propiedad = propiedades.find(p =>
-            (p.id_propiedad ?? p.idPropiedad) === (m.id_Propiedad ?? m.idPropiedad))
+      const enriched = multas.map(m => {
+        const residente = residentes.find(r =>
+          (r.id_Residente ?? r.idResidente) === (m.id_Residente ?? m.idResidente))
+        const persona = personas.find(p =>
+          (p.id_Persona ?? p.idPersona) === (residente?.id_Persona ?? residente?.idPersona))
+        const propiedad = propiedades.find(p =>
+          (p.id_Propiedad ?? p.idPropiedad) === (m.id_Propiedad ?? m.idPropiedad))
 
-          const nombreResidente = persona
+        return {
+          ...m,
+          _nombreResidente: persona
             ? `${persona.nombres ?? ''} ${persona.apellidos ?? ''}`.trim()
-            : `Residente #${m.id_Residente ?? m.idResidente}`
-
-          const codigoPropiedad = propiedad?.codigo ?? (m.id_Propiedad ? `Prop. #${m.id_Propiedad}` : '—')
-
-          return { ...m, _nombreResidente: nombreResidente, _codigoPropiedad: codigoPropiedad }
-        })
-
-        setRows(enriched)
+            : `Residente #${m.id_Residente ?? m.idResidente}`,
+          _codigoPropiedad: propiedad?.codigo ?? (m.id_Propiedad ? `Prop. #${m.id_Propiedad}` : '—'),
+        }
       })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
-  }
+      setRows(enriched)
+    })
+    .catch(err => setError(err.message))
+    .finally(() => setLoading(false))
+}
 
   useEffect(() => { fetchData() }, [])
 

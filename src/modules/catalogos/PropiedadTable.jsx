@@ -31,8 +31,8 @@ export default function PropiedadTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getPropiedades(), getTipoPropiedades()])
       .then(([pRes, tRes]) => {
-        const propiedades = Array.isArray(pRes.data) ? pRes.data : pRes.data?.data ?? []
-        const tipos       = Array.isArray(tRes.data) ? tRes.data : tRes.data?.data ?? []
+        const propiedades = Array.isArray(pRes.data.data) ? pRes.data.data : pRes.data?.data ?? []
+        const tipos       = Array.isArray(tRes.data.data) ? tRes.data.data : tRes.data?.data ?? []
 
         const enriched = propiedades.map(p => {
           const tipo = tipos.find(t =>

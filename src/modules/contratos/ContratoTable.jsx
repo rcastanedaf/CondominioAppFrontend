@@ -28,9 +28,9 @@ export default function ContratoTable({ moduleColor }) {
     Promise.all([getContratos(), getResidentes(), getPropiedades(), getPersonas()])
       .then(([cRes, rRes, pRes, perRes]) => {
         const contratos   = Array.isArray(cRes.data)   ? cRes.data   : cRes.data?.data   ?? []
-        const residentes  = Array.isArray(rRes.data)   ? rRes.data   : rRes.data?.data   ?? []
-        const propiedades = Array.isArray(pRes.data)   ? pRes.data   : pRes.data?.data   ?? []
-        const personas    = Array.isArray(perRes.data) ? perRes.data : perRes.data?.data ?? []
+        const residentes  = rRes.data.data  ?? rRes.data   ?? rRes.data?.data   ?? []
+        const propiedades = pRes.data.data  ?? pRes.data   ?? pRes.data?.data   ?? []
+        const personas    = perRes.data.data ?? perRes.data ?? perRes.data?.data ?? []
 
         const enriched = contratos.map(c => {
           const residente  = residentes.find(r =>

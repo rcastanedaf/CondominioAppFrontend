@@ -25,10 +25,10 @@ export default function VehiculoTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getVehiculos(), getResidentes(), getPersonas(), getPropiedades()])
       .then(([vRes, rRes, perRes, pRes]) => {
-        const vehiculos   = Array.isArray(vRes.data)   ? vRes.data   : vRes.data?.data   ?? []
-        const residentes  = Array.isArray(rRes.data)   ? rRes.data   : rRes.data?.data   ?? []
-        const personas    = Array.isArray(perRes.data) ? perRes.data : perRes.data?.data ?? []
-        const propiedades = Array.isArray(pRes.data)   ? pRes.data   : pRes.data?.data   ?? []
+        const vehiculos   = vRes.data?.data ?? []
+        const residentes  = rRes.data?.data ?? []
+        const personas    = perRes.data?.data ?? []
+        const propiedades = pRes.data?.data ?? []
 
         const enriched = vehiculos.map(v => {
           const residente = residentes.find(r =>

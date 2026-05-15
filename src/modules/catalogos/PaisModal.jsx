@@ -15,6 +15,8 @@ export default function PaisModal({ show, onClose, onSaved, pais }) {
 
   const handleSubmit = async () => {
     if (!codigo.trim()) return setError('El código es requerido')
+    if (!/^[A-Z]{2,3}$/.test(codigo.trim()))
+      return setError('El código debe ser 2 o 3 letras mayúsculas (ej: GT, USA)')
     if (!nombre.trim()) return setError('El nombre es requerido')
     setLoading(true); setError(null)
     try {

@@ -23,13 +23,9 @@ export default function ResidenteTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getResidentes(), getPersonas()])
       .then(([resRes, perRes]) => {
-        const listaResidentes = Array.isArray(resRes.data)
-          ? resRes.data
-          : resRes.data?.data ?? []
+        const listaResidentes = resRes.data?.data ?? []
 
-        const listaPersonas = Array.isArray(perRes.data)
-          ? perRes.data
-          : perRes.data?.data ?? []
+        const listaPersonas = perRes.data?.data ?? []
 
         const enriched = listaResidentes.map(r => {
           const persona = listaPersonas.find(

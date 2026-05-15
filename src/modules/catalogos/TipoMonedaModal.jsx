@@ -27,6 +27,10 @@ export default function TipoMonedaModal({ show, onClose, onSaved, tipoMoneda }) 
   const handleSubmit = async () => {
     if (!codigo.trim()) return setError('El código es requerido')
     if (!nombre.trim()) return setError('El nombre es requerido')
+    if (!/^[A-Z]{3}$/.test(codigo.trim()))
+      return setError('El código debe ser exactamente 3 letras mayúsculas (ej: USD, GTQ)')
+    if (!tipoCambioGtq || Number(tipoCambioGtq) <= 0)
+      return setError('El tipo de cambio debe ser mayor a 0')
 
     setLoading(true); setError(null)
     try {

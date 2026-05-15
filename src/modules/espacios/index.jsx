@@ -1,15 +1,18 @@
 import ModuleLayout       from '../../shared/components/ModuleLayout'
 import EspacioComunTable  from './EspacioComunTable'
 import ReservaTable       from './ReservaTable'
+import CobroReservaTable from './CobroReservaTable'
 
 const CRUD_CARDS = [
   { id: 'catalogo-espacios', label: 'Catálogo de Espacios', emoji: '🏊', desc: 'Piscina, salón, gimnasio, etc.', color: '#fd7e14' },
   { id: 'reservas',          label: 'Reservas',             emoji: '📅', desc: 'Gestión de reservas activas',    color: '#0d6efd' },
+  { id: 'cobro-reservas', label: 'Cobro de Reservas', emoji: '💳', desc: 'Gestión de cobros por uso de espacios', color: '#20c997' },
 ]
 
 const SUB_VIEWS = {
   'catalogo-espacios': (color) => <EspacioComunTable moduleColor={color} />,
   'reservas':          (color) => <ReservaTable       moduleColor={color} />,
+  'cobro-reservas': (color) => <CobroReservaTable moduleColor={color} />,
 }
 
 export default function EspaciosModule({ mod, activeSubModule, setActiveSubModule }) {

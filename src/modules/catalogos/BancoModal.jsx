@@ -10,7 +10,7 @@ import { createBanco, updateBanco } from './bancoService'
  */
 export default function BancoModal({ show, onClose, onSaved, banco }) {
   const [nombre,  setNombre]  = useState('')
-  const [activo,  setActivo]  = useState('')
+  const [activo,  setActivo]  = useState(1)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
 
@@ -21,6 +21,7 @@ export default function BancoModal({ show, onClose, onSaved, banco }) {
       setActivo(banco.activo)
     } else {
       setNombre('')
+      setActivo(1)
     }
     setError(null)
   }, [banco, show])
@@ -92,17 +93,16 @@ export default function BancoModal({ show, onClose, onSaved, banco }) {
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label fw-semibold">Estado del Banco</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="0"
-                  value={activo}
-                  onChange={e => setActivo(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  
-                />
-              </div>
+              <label className="form-label fw-semibold">Estado</label>
+              <select
+                className="form-select"
+                value={activo}
+                onChange={e => setActivo(Number(e.target.value))}
+              >
+                <option value={1}>Activo</option>
+                <option value={0}>Inactivo</option>
+              </select>
+            </div>
             </div>
 
             <div className="modal-footer">

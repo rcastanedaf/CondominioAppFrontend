@@ -1,6 +1,4 @@
 import { MODULES } from '../data/modules'
-
-// Importación de cada módulo
 import CatalogosModule    from '../modules/catalogos/index'
 import ResidentesModule   from '../modules/residentes/index'
 import ContratosModule    from '../modules/contratos/index'
@@ -11,9 +9,10 @@ import EspaciosModule     from '../modules/espacios/index'
 import PersonalModule     from '../modules/personal/index'
 import IncidenciasModule  from '../modules/incidencias/index'
 import SistemaModule      from '../modules/sistema/index'
+import Dashboard          from '../modules/dashboard/Dashboard'
 
-// Mapa id → componente
 const MODULE_COMPONENTS = {
+  dashboard:   () => <main className="cms-main overflow-auto"><Dashboard /></main>,
   catalogos:   CatalogosModule,
   residentes:  ResidentesModule,
   contratos:   ContratosModule,
@@ -26,11 +25,6 @@ const MODULE_COMPONENTS = {
   sistema:     SistemaModule,
 }
 
-/**
- * ModuleRouter: renderiza el módulo activo según activeModule.
- * Agrega el módulo como prop para que cada componente pueda
- * leer su color, icono, sub-módulos y tareas.
- */
 export default function ModuleRouter({ activeModule, activeSubModule, setActiveSubModule }) {
   const mod = MODULES.find(m => m.id === activeModule)
   const ActiveModule = MODULE_COMPONENTS[activeModule]
@@ -44,6 +38,11 @@ export default function ModuleRouter({ activeModule, activeSubModule, setActiveS
         </div>
       </main>
     )
+  }
+
+  // Dashboard no necesita props de submodulo
+  if (activeModule === 'dashboard') {
+    return <ActiveModule />
   }
 
   return (

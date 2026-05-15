@@ -48,12 +48,11 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
   if (!fechaNac)         return setError('La fecha de nacimiento es requerida')
 
   setLoading(true); setError(null)
-  const hoy = new Date().toISOString().substring(0, 10)
 
   try {
     if (persona) {
       const payload = {
-        Id_Persona:          persona.id,  // ✅ usa persona.id que es el campo normalizado
+        Id_Persona:          persona.id,  //
         Tipo:                tipo,
         Nombres:             nombres,
         Apellidos:           apellidos,
@@ -69,7 +68,6 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
         Id_Regimen_Fiscal:   1,
         Observaciones:       observaciones || '',
         Activo:              Number(activo),
-        Fecha_Registro:      hoy,
       }
       await updatePersona(persona.id, payload)  // ✅ usa persona.id
       } else {
@@ -89,7 +87,6 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
         Id_Regimen_Fiscal:   1,
         Observaciones:       observaciones || '',
         Activo:              Number(activo),
-        Fecha_Registro:      hoy,
       }
       await createPersona(payload)
     }

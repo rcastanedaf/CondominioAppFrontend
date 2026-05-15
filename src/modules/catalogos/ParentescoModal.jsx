@@ -14,6 +14,9 @@ export default function ParentescoModal({ show, onClose, onSaved, parentesco }) 
 
   const handleSubmit = async () => {
     if (!nombre.trim()) return setError('El nombre es requerido')
+    if (nombre.trim().length < 2) return setError('El nombre debe tener al menos 2 caracteres')
+    if (!/^[a-záéíóúñA-ZÁÉÍÓÚÑ\s\-]+$/.test(nombre.trim()))
+      return setError('El nombre solo debe contener letras')
     setLoading(true); setError(null)
     try {
       const payload = { id: parentesco ? parentesco.id : 0, nombre }

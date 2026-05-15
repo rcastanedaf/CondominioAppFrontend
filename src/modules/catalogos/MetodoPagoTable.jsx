@@ -15,7 +15,7 @@ export default function MetodoPagoTable({ moduleColor }) {
   const fetchData = () => {
     setLoading(true)
     getMetodosPago()
-      .then(res => setRows(res.data))
+      .then(res => setRows(res.data.data))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }

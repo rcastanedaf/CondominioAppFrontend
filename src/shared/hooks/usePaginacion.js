@@ -7,8 +7,9 @@ export function usePaginacion(datos, porPaginaInicial = 10) {
   const [porPagina,    setPorPagina]    = useState(porPaginaInicial)
   const [filtro,       setFiltro]       = useState('')
 
-  // Filtrado
-  const datosFiltrados = datos.filter(row =>
+  const lista = Array.isArray(datos) ? datos : []
+
+  const datosFiltrados = lista.filter(row =>   // <-- cambia "datos" por "lista"
     Object.values(row).some(val =>
       String(val).toLowerCase().includes(filtro.toLowerCase())
     )
