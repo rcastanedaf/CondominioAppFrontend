@@ -36,10 +36,24 @@ export default function Topbar({ collapsed, onToggle, usuario }) {
 
             {/* Breadcrumb / título dinámico */}
             <div style={{ flex: 1 }}>
-                <span className="text-muted" style={{ fontSize: 13 }}>
-                    <i className="bi bi-house me-1"></i>
+                <button
+                    onClick={() => navigate('/')}
+                    style={{
+                        background:  'none',
+                        border:      'none',
+                        padding:     0,
+                        cursor:      'pointer',
+                        color:       '#6c757d',
+                        fontSize:    13,
+                        display:     'flex',
+                        alignItems:  'center',
+                        gap:         4,
+                    }}
+                    title="Ir al inicio"
+                >
+                    <i className="bi bi-house me-1" />
                     CondominioApp
-                </span>
+                </button>
             </div>
 
             {/* Acciones rápidas */}

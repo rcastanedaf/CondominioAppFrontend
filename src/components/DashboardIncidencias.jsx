@@ -31,10 +31,18 @@ export default function DashboardIncidencias() {
     const [error, setError]     = useState(false);
 
     useEffect(() => {
-        getDashboardIncidencias()
-            .then(r => setData(r.data.data))
-            .catch(() => setError(true))
-            .finally(() => setLoading(false));
+    getDashboardIncidencias()
+        .then(r => {
+            console.log('Respuesta completa:', r);       // ver estructura
+            console.log('r.data:', r.data);
+            console.log('r.data.data:', r.data.data);
+            setData(r.data.data);
+        })
+        .catch(err => {
+            console.error('Error:', err);                // ver el error exacto
+            setError(true);
+        })
+        .finally(() => setLoading(false));
     }, []);
 
     if (loading) return (

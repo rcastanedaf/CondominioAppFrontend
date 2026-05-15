@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 const modulos = [
     {
@@ -148,6 +148,7 @@ const modulos = [
 ];
 
 export default function Sidebar({ collapsed, onToggle }) {
+    const navigate = useNavigate();
     const location  = useLocation();
     const [open, setOpen] = useState(() => {
         // Abrir automáticamente el módulo activo
@@ -186,7 +187,7 @@ export default function Sidebar({ collapsed, onToggle }) {
                     gap:            12,
                     cursor:         'pointer',
                 }}
-                onClick={onToggle}
+                onClick={() => navigate('/')}
             >
                 <div
                     style={{
