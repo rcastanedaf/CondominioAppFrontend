@@ -16,7 +16,7 @@ export default function Layout() {
     })();
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: '#f4f6fb' }}>
+        <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f4f6fb' }}>
 
             {/* Sidebar */}
             <Sidebar
