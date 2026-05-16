@@ -1,5 +1,5 @@
 import axios from 'axios'
-const BASE = 'https://localhost:44352/Rol'  // ← sin api/
+const BASE = 'https://localhost:44352/api/Rol'  // ← sin api/
 
 export const getAllRoles      = ()              => axios.get(`${BASE}/get-all`)
 export const getAllPermisos   = ()              => axios.get(`${BASE}/get-all-permisos`)
