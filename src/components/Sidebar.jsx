@@ -163,18 +163,17 @@ export default function Sidebar({ collapsed, onToggle }) {
     return (
         <aside
             style={{
-                width:           collapsed ? 64 : 260,
-                minHeight:       '100vh',
-                background:      'linear-gradient(180deg, #0f2044 0%, #1a3560 100%)',
-                transition:      'width 0.25s ease',
-                overflowX:       'hidden',
-                overflowY:       'auto',
-                display:         'flex',
-                flexDirection:   'column',
-                boxShadow:       '3px 0 15px rgba(0,0,0,0.25)',
-                flexShrink:      0,
-                position:        'sticky',
-                top:             0,
+                width:          collapsed ? 64 : 260,
+                height:         '100vh',          // ← era minHeight: '100vh'
+                background:     'linear-gradient(180deg, #0f2044 0%, #1a3560 100%)',
+                transition:     'width 0.25s ease',
+                overflowX:      'hidden',
+                overflowY:      'auto',           // ← ya lo tenías, esto activa el scroll del sidebar
+                display:        'flex',
+                flexDirection:  'column',
+                boxShadow:      '3px 0 15px rgba(0,0,0,0.25)',
+                flexShrink:     0,
+                // ← elimina position: 'sticky' y top: 0
             }}
         >
             {/* ── Logo / Header ── */}

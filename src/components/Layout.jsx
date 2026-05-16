@@ -6,7 +6,6 @@ import Topbar  from './Topbar';
 export default function Layout() {
     const [collapsed, setCollapsed] = useState(false);
 
-    // Leer usuario desde localStorage
     const usuario = (() => {
         try {
             return JSON.parse(localStorage.getItem('usuario') ?? '{}');
