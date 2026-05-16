@@ -17,8 +17,8 @@ export default function AsistenciaView({ moduleColor }) {
   // Cargar lista de empleados al montar
   useEffect(() => {
     Promise.all([
-      axios.get(`${BASE_EMP}/get-all`).then(r => r.data?.data ?? []),
-      axios.get(`${BASE_PER}/get-all-persona`).then(r => r.data?.data ?? []), 
+      axios.get(`${BASE_EMP}/get-all`),
+      axios.get(`${BASE_PER}/get-all-persona`), 
     ]).then(([eRes, pRes]) => {
       setEmpleados(eRes.data?.data ?? [])
       setPersonas(pRes.data?.data  ?? [])
@@ -27,6 +27,7 @@ export default function AsistenciaView({ moduleColor }) {
   }, [])
 
   const cargarAsistencia = (id) => {
+    console.log('ID que se manda:', id, typeof id)  // ← agrega esto
     if (!id) return
     setLoading(true)
     getAsistenciaByEmpleado(id)
