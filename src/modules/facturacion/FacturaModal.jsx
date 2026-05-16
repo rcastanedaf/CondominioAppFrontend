@@ -3,9 +3,12 @@ import { createFactura, updateFactura } from './facturacionService'
 import FkSelector from '../../components/FkSelector'
 import { getPropiedades } from '../catalogos/propiedadService'
 import { getResidentes } from '../residentes/residenteService'
+import { getPersonas } from '../residentes/personaService'
 import { getTipoMonedas } from '../catalogos/tipoMonedaService'
 import { getCiclos } from './cicloFacturacionService'
 import { getContratos } from '../contratos/contratoService'
+
+import { getTipoServicios } from './tipoServicioService'
 
 const ESTADOS = ['PENDIENTE', 'PAGADA', 'VENCIDA', 'ANULADA', 'EN_PROCESO']
 
@@ -124,12 +127,118 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
         idContratoOrigen:      Number(idContratoOrigen) || null,
         motivoAnulacion, observaciones,
       }
+      console.log(payload);
       factura ? await updateFactura(payload) : await createFactura(payload)
       onSaved()
     } catch (err) {
       setError(err.response?.data?.message ?? err.message)
     } finally { setLoading(false) }
   }
+
+  const getDataCicloFactura = async () => {
+    try {
+      const cicloResponse = await getCiclos();
+      const propiedadResponse = await getPropiedades();
+      const tipoServResponse = await getTipoServicios();
+
+      // ESTRUCTURAS REALES
+      const ciclos = cicloResponse.data ?? [];
+
+      const propiedades = propiedadResponse.data.data ?? [];
+
+      const tiposServicio = tipoServResponse.data ?? [];
+
+      // MAPA PROPIEDADES
+      const propiedadesMap = new Map(
+        propiedades.map(p => [
+          p.id_propiedad,
+          p
+        ])
+      );
+
+      // MAPA SERVICIOS
+      const tiposServicioMap = new Map(
+        tiposServicio.map(ts => [
+          ts.idTipoServicio,
+          ts
+        ])
+      );
+
+      // COMBINAR
+      const resultado = ciclos.map(c => {
+
+        const propiedad = propiedadesMap.get(c.idPropiedad);
+
+        const tipoServicio = tiposServicioMap.get(c.idTipoServicio);
+
+        return {
+          ...c,
+
+          codigoPropiedad:
+            propiedad?.codigo ?? '',
+
+          nombreServicio:
+            tipoServicio?.nombre ?? '',
+
+          label:
+            `${propiedad?.codigo ?? 'SIN-PROP'} - ${tipoServicio?.nombre ?? 'SIN-SERVICIO'}`
+        };
+      });
+
+      return {
+        data: {
+          data: resultado
+        }
+      };
+
+    } catch (error) {
+
+      console.error(error);
+
+      return {
+        data: {
+          data: []
+        }
+      };
+    }
+  };
+
+  const getResidentesConPersona = async () => {
+    try {
+      const residentesResponse = await getResidentes();
+      const personasResponse = await getPersonas();
+
+      // EXTRAER ARREGLOS REALES
+      const residentes = residentesResponse.data.data;
+      const personas = personasResponse.data.data;
+
+      // MAPA DE PERSONAS
+      const personasMap = new Map(
+        personas.map(p => [p.id_Persona, p])
+      );
+
+      // COMBINAR
+      const resultado = residentes.map(r => {
+        const persona = personasMap.get(r.id_Persona);
+
+        return {
+          ...r,
+          nombres: persona?.nombres ?? '',
+          apellidos: persona?.apellidos ?? '',
+        };
+      });
+
+      return {
+        data: {
+          data: resultado
+        }
+      };
+
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  };
 
   if (!show) return null
   return (
@@ -205,14 +314,19 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
                 <div className="col-md-4">
                   <FkSelector
                     label="Residente"
-                    fetchFn={getResidentes}
-                    getId={r => r.idResidente ?? r.id}
-                    getLabel={r => r.nombres
-                      ? `${r.nombres} ${r.apellidos ?? ''}`.trim()
-                      : `#${r.idResidente ?? r.id}`}
+                    fetchFn={getResidentesConPersona}
+                    getId={r => r.id_Residente ?? r.id}
+                    getLabel={r =>
+                      r.nombres
+                        ? `${r.nombres} ${r.apellidos ?? ''}`.trim()
+                        : `#${r.id_Residente ?? r.id}`
+                    }
                     value={idResidente}
                     displayValue={labelResidente}
-                    onChange={(id, lbl) => { setIdRes(id); setLabelRes(lbl) }}
+                    onChange={(id, lbl) => {
+                      setIdRes(id);
+                      setLabelRes(lbl);
+                    }}
                     placeholder="Selecciona residente..."
                   />
                 </div>
@@ -363,12 +477,18 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
                 <div className="col-md-3">
                   <FkSelector
                     label="Ciclo de Facturación"
-                    fetchFn={getCiclos}
+                    fetchFn={getDataCicloFactura}
                     getId={c => c.idCiclo ?? c.id}
-                    getLabel={c => c.nombre ?? c.descripcion ?? c.periodo ?? `#${c.idCiclo ?? c.id}`}
+                    getLabel={c =>
+                      c.label ??
+                      `${c.codigoPropiedad ?? ''} - ${c.nombreServicio ?? ''}`
+                    }
                     value={idCicloOrigen}
                     displayValue={labelCiclo}
-                    onChange={(id, lbl) => { setIdCiclo(id); setLabelCiclo(lbl) }}
+                    onChange={(id, lbl) => {
+                      setIdCiclo(id);
+                      setLabelCiclo(lbl);
+                    }}
                     placeholder="Selecciona ciclo..."
                   />
                 </div>
@@ -377,8 +497,8 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
                   <FkSelector
                     label="Contrato Origen"
                     fetchFn={getContratos}
-                    getId={c => c.idContrato ?? c.id}
-                    getLabel={c => c.numeroContrato ?? `Contrato #${c.idContrato ?? c.id}`}
+                    getId={c => c.id_contrato ?? c.id}
+                    getLabel={c => c.numeroContrato ?? `Contrato #${c.tipo_contrato ?? c.id}`}
                     value={idContratoOrigen}
                     displayValue={labelContrato}
                     onChange={(id, lbl) => { setIdContrato(id); setLabelContrato(lbl) }}
