@@ -1,256 +1,304 @@
-import { useState } from 'react'
-import { getAsistenciaByEmpleado, createAsistencia, registrarSalida } from '../personal/asistenciaService'
-import { getEmpleados }  from '../personal/empleadoService'
-import { getPersonas }   from '../residentes/personaService'
-import FkSelector        from '../../components/FkSelector'
+import { useState, useEffect } from 'react'
+import { getUsuarios, deleteUsuario, desbloquear, toggleActivo } from './usuarioService'
+import UsuarioModal        from './UsuarioModal'
+import { usePaginacion }   from '../../shared/hooks/usePaginacion'
+import PaginacionFooter    from '../../shared/components/PaginacionFooter'
 
-const ESTADO_COLOR = { PRESENTE: 'success', AUSENTE: 'danger', TARDANZA: 'warning', PERMISO: 'info', VACACIONES: 'primary' }
-
-export default function AsistenciaView({ moduleColor }) {
-  const [idEmpleado,    setIdEmp]   = useState('')
-  const [labelEmpleado, setLabelEmp]= useState('')
-  const [registros,     setRegistros] = useState([])
-  const [loading,       setLoading] = useState(false)
-  const [error,         setError]   = useState(null)
-  const [showModal,     setShowModal] = useState(false)
-  const [confirmSalida, setConfirmSalida] = useState(null)
-
-  const buscarAsistencia = async (id) => {
-    if (!id) return
-    setLoading(true); setError(null)
-    try {
-      const res = await getAsistenciaByEmpleado(id)
-      setRegistros(res.data?.data ?? [])
-    } catch (e) { setError(e.response?.data?.message || e.message); setRegistros([]) }
-    finally { setLoading(false) }
-  }
-
-  const handleSelectEmpleado = (id, lbl) => {
-    setIdEmp(id); setLabelEmp(lbl)
-    buscarAsistencia(id)
-  }
-
-  const handleRegistrarSalida = async (id) => {
-    try {
-      await registrarSalida(id)
-      setConfirmSalida(null)
-      buscarAsistencia(idEmpleado)
-    } catch (e) { alert('Error: ' + e.message) }
-  }
-
-  // Para el FkSelector de empleados necesitamos personas también
-  const fetchEmpleadosEnriquecidos = async () => {
-    const [eRes, perRes] = await Promise.all([getEmpleados(), getPersonas()])
-    const empleados = eRes.data?.data ?? []
-    const personas  = perRes.data?.data ?? []
-    return {
-      data: empleados.map(e => {
-        const persona = personas.find(p =>
-          (p.id_Persona ?? p.idPersona) === (e.id_Persona ?? e.idPersona))
-        return { ...e, _nombreCompleto: persona ? `${persona.nombres ?? ''} ${persona.apellidos ?? ''}`.trim() : `Empleado #${e.id}` }
-      })
-    }
-  }
-
-  return (
-    <div>
-      {/* Selector de empleado */}
-      <div className="card border-0 shadow-sm mb-4">
-        <div className="card-body">
-          <h6 className="fw-bold mb-3" style={{ color: moduleColor }}>
-            <i className="bi bi-search me-2" />Buscar asistencia por empleado
-          </h6>
-          <div className="row g-3 align-items-end">
-            <div className="col-md-6">
-              <FkSelector
-                label="Empleado"
-                fetchFn={fetchEmpleadosEnriquecidos}
-                getId={e => e.id}
-                getLabel={e => e._nombreCompleto ?? `Empleado #${e.id}`}
-                value={idEmpleado}
-                displayValue={labelEmpleado}
-                onChange={handleSelectEmpleado}
-                placeholder="Selecciona un empleado..."
-              />
-            </div>
-            {idEmpleado && (
-              <div className="col-md-3">
-                <button
-                  className="btn btn-primary w-100"
-                  onClick={() => setShowModal(true)}
-                >
-                  <i className="bi bi-plus-lg me-2" />Registrar Asistencia
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Resultado */}
-      {error && <div className="alert alert-danger"><i className="bi bi-exclamation-circle me-2" />{error}</div>}
-
-      {loading && (
-        <div className="text-center py-5 text-muted">
-          <div className="spinner-border spinner-border-sm me-2" />Cargando asistencia...
-        </div>
-      )}
-
-      {!loading && idEmpleado && registros.length === 0 && (
-        <div className="text-center py-5 text-muted">
-          <i className="bi bi-inbox fs-2 d-block mb-2" />
-          Sin registros de asistencia para este empleado
-        </div>
-      )}
-
-      {!loading && registros.length > 0 && (
-        <div className="cms-table-wrap">
-          <table className="table table-hover cms-table">
-            <thead>
-              <tr>
-                <th>#</th><th>Fecha</th><th>Entrada</th><th>Salida</th>
-                <th>Estado</th><th>Min. Extra</th><th>Min. Tardanza</th><th>Observaciones</th><th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {registros.map((r, i) => (
-                <tr key={r.id ?? i}>
-                  <td className="text-muted">{r.id}</td>
-                  <td className="fw-semibold">{r.fecha?.substring(0, 10) ?? '—'}</td>
-                  <td>{r.hora_Entrada ?? r.horaEntrada ?? '—'}</td>
-                  <td>{r.hora_Salida ?? r.horaSalida ?? <span className="badge text-bg-warning">Pendiente</span>}</td>
-                  <td>
-                    <span className={`badge text-bg-${ESTADO_COLOR[r.estado] || 'secondary'}`}>{r.estado}</span>
-                  </td>
-                  <td>{r.minutos_Extra ?? r.minutosExtra ?? 0} min</td>
-                  <td>{r.minutos_Tardanza ?? r.minutosTardanza ?? 0} min</td>
-                  <td className="text-muted small">{r.observaciones ?? '—'}</td>
-                  <td>
-                    {!(r.hora_Salida ?? r.horaSalida) && (
-                      confirmSalida === r.id ? (
-                        <div className="d-flex gap-1">
-                          <span className="text-warning small align-self-center">¿Registrar salida?</span>
-                          <button className="btn btn-sm btn-success py-0 px-2" onClick={() => handleRegistrarSalida(r.id)}>Sí</button>
-                          <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmSalida(null)}>No</button>
-                        </div>
-                      ) : (
-                        <button className="btn btn-sm btn-outline-success py-0 px-2" onClick={() => setConfirmSalida(r.id)}>
-                          <i className="bi bi-box-arrow-right me-1" style={{ fontSize: 11 }} />Registrar Salida
-                        </button>
-                      )
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {showModal && (
-        <AsistenciaModal
-          idEmpleado={idEmpleado}
-          onClose={() => setShowModal(false)}
-          onSaved={() => { setShowModal(false); buscarAsistencia(idEmpleado) }}
-        />
-      )}
-    </div>
-  )
+// ── Helpers de formato ────────────────────────────────────────
+const fmtFecha = (ts) => {
+    if (!ts) return '—'
+    return new Date(ts).toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function AsistenciaModal({ idEmpleado, onClose, onSaved }) {
-  const hoy = new Date().toISOString().substring(0, 10)
-  const ahora = new Date().toTimeString().substring(0, 5)
+const fmtTimestamp = (ts) => {
+    if (!ts) return '—'
+    return new Date(ts).toLocaleString('es-GT', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    })
+}
 
-  const [fecha,         setFecha]   = useState(hoy)
-  const [horaEntrada,   setHoraIn]  = useState(ahora)
-  const [horaSalida,    setHoraSal] = useState('')
-  const [estado,        setEstado]  = useState('PRESENTE')
-  const [minutosExtra,  setMExtra]  = useState(0)
-  const [minutosTard,   setMTard]   = useState(0)
-  const [observaciones, setObs]     = useState('')
-  const [loading,       setLoading] = useState(false)
-  const [error,         setError]   = useState(null)
+export default function UsuarioTable({ moduleColor = '#1e50a0' }) {
 
-  const handleSubmit = async () => {
-    if (!fecha)      { setError('La fecha es requerida'); return }
-    if (!horaEntrada){ setError('La hora de entrada es requerida'); return }
-    setLoading(true); setError(null)
-    try {
-      await createAsistencia({
-        Id_Empleado:       Number(idEmpleado),
-        Fecha:             fecha,
-        Hora_Entrada:      horaEntrada,
-        Hora_Salida:       horaSalida || null,
-        Estado:            estado,
-        Minutos_Extra:     Number(minutosExtra)  || 0,
-        Minutos_Tardanza:  Number(minutosTard)   || 0,
-        Observaciones:     observaciones || null,
-        Registrado_Por:    1,
-      })
-      onSaved()
-    } catch (e) { setError(e.response?.data?.message || e.message) }
-    finally { setLoading(false) }
-  }
+    const [rows,      setRows]      = useState([])
+    const [loading,   setLoading]   = useState(true)
+    const [error,     setError]     = useState(null)
+    const [showModal, setShowModal] = useState(false)
+    const [selected,  setSelected]  = useState(null)
+    const [confirmId, setConfirmId] = useState(null)
 
-  return (
-    <>
-      <div className="modal-backdrop fade show" onClick={onClose} />
-      <div className="modal fade show d-block" tabIndex="-1">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">📋 Registrar Asistencia</h5>
-              <button className="btn-close" onClick={onClose} />
-            </div>
-            <div className="modal-body">
-              {error && <div className="alert alert-danger py-2 mb-3"><i className="bi bi-exclamation-circle me-2" />{error}</div>}
-              <div className="row g-3">
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Fecha <span className="text-danger">*</span></label>
-                  <input type="date" className="form-control" value={fecha} onChange={e => setFecha(e.target.value)} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Hora Entrada <span className="text-danger">*</span></label>
-                  <input type="time" className="form-control" value={horaEntrada} onChange={e => setHoraIn(e.target.value)} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Hora Salida</label>
-                  <input type="time" className="form-control" value={horaSalida} onChange={e => setHoraSal(e.target.value)} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Estado</label>
-                  <select className="form-select" value={estado} onChange={e => setEstado(e.target.value)}>
-                    <option value="PRESENTE">PRESENTE</option>
-                    <option value="AUSENTE">AUSENTE</option>
-                    <option value="TARDANZA">TARDANZA</option>
-                    <option value="PERMISO">PERMISO</option>
-                    <option value="VACACIONES">VACACIONES</option>
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Min. Extra</label>
-                  <input type="number" className="form-control" value={minutosExtra} onChange={e => setMExtra(e.target.value)} min={0} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Min. Tardanza</label>
-                  <input type="number" className="form-control" value={minutosTard} onChange={e => setMTard(e.target.value)} min={0} />
-                </div>
-                <div className="col-12">
-                  <label className="form-label fw-semibold">Observaciones</label>
-                  <textarea className="form-control" rows={2} value={observaciones} onChange={e => setObs(e.target.value)} />
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-outline-secondary" onClick={onClose} disabled={loading}>Cancelar</button>
-              <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-                {loading ? <><span className="spinner-border spinner-border-sm me-2" />Registrando...</> : 'Registrar Asistencia'}
-              </button>
-            </div>
-          </div>
+    // ── Cargar datos ─────────────────────────────────────────
+    const fetchData = () => {
+        setLoading(true)
+        getUsuarios()
+            .then(res => setRows(res.data?.data ?? res.data ?? []))
+            .catch(err => setError(err.message))
+            .finally(() => setLoading(false))
+    }
+
+    useEffect(() => { fetchData() }, [])
+
+    // ── Paginación + filtro ──────────────────────────────────
+    const {
+        datosPagina, datosFiltrados,
+        filtro, setFiltro,
+        paginaSegura, totalPaginas, porPagina, setPorPagina, irA, paginas,
+    } = usePaginacion(rows)
+
+    // ── Acciones ─────────────────────────────────────────────
+    const handleEliminar = async (id) => {
+        try {
+            await deleteUsuario(id)
+            setConfirmId(null)
+            fetchData()
+        } catch (err) {
+            alert('Error al eliminar: ' + (err.response?.data?.message ?? err.message))
+        }
+    }
+
+    const handleDesbloquear = async (id) => {
+        try {
+            await desbloquear(id)
+            fetchData()
+        } catch (err) {
+            alert('Error al desbloquear: ' + (err.response?.data?.message ?? err.message))
+        }
+    }
+
+    const handleToggleActivo = async (row) => {
+        const nuevoActivo = row.activo === 1 || row.activo === true ? 0 : 1
+        try {
+            await toggleActivo(row.id_Usuario ?? row.idUsuario, nuevoActivo)
+            fetchData()
+        } catch (err) {
+            alert('Error al cambiar estado: ' + (err.response?.data?.message ?? err.message))
+        }
+    }
+
+    // ── Render ───────────────────────────────────────────────
+    if (loading) return (
+        <div className="text-center py-5 text-muted">
+            <div className="spinner-border spinner-border-sm me-2" />Cargando usuarios...
         </div>
-      </div>
-    </>
-  )
+    )
+    if (error) return (
+        <div className="alert alert-danger py-2">
+            <i className="bi bi-exclamation-circle me-2" />{error}
+        </div>
+    )
+
+    return (
+        <>
+            {/* ── Header + buscador + paginación superior ── */}
+            <PaginacionFooter
+                titulo="Usuarios del Sistema"
+                icono="bi-person-lock"
+                labelBoton="Nuevo Usuario"
+                onNuevo={() => { setSelected(null); setShowModal(true) }}
+                moduleColor={moduleColor}
+                filtro={filtro}
+                setFiltro={setFiltro}
+                placeholder="Filtrar por usuario, persona o rol..."
+                paginaSegura={paginaSegura}
+                totalPaginas={totalPaginas}
+                porPagina={porPagina}
+                setPorPagina={setPorPagina}
+                irA={irA}
+                paginas={paginas}
+                totalDatos={datosFiltrados.length}
+                label="usuarios"
+            />
+
+            {/* ── Tabla ── */}
+            <div className="cms-table-wrap">
+                <table className="table table-hover cms-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Persona</th>
+                            <th>Username</th>
+                            <th>Rol</th>
+                            <th className="text-center">Activo</th>
+                            <th className="text-center">Bloqueado</th>
+                            <th className="text-center">Intentos Fallidos</th>
+                            <th>Último Acceso</th>
+                            <th>Vencimiento</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {datosPagina.map((row, i) => {
+                            const id      = row.id_Usuario ?? row.idUsuario
+                            const activo  = row.activo === 1 || row.activo === true
+                            const bloq    = row.bloqueado === 1 || row.bloqueado === true
+                            const intentos= row.intentos_Fallidos ?? row.intentosFallidos ?? 0
+
+                            return (
+                                <tr key={id ?? i}>
+
+                                    {/* ID */}
+                                    <td className="text-muted">{id}</td>
+
+                                    {/* Persona */}
+                                    <td>
+                                        <span className="fw-semibold">
+                                            {row._nombrePersona
+                                                ?? row.nombrePersona
+                                                ?? `Persona #${row.id_Persona ?? row.idPersona}`}
+                                        </span>
+                                    </td>
+
+                                    {/* Username */}
+                                    <td>
+                                        <span className="badge bg-primary bg-opacity-10 text-primary px-2 py-1">
+                                            <i className="bi bi-at me-1" style={{ fontSize: 11 }} />
+                                            {row.username}
+                                        </span>
+                                    </td>
+
+                                    {/* Rol */}
+                                    <td>
+                                        <span className="badge bg-secondary bg-opacity-20 text-dark px-2">
+                                            {row._nombreRol
+                                                ?? row.nombreRol
+                                                ?? row.rol
+                                                ?? `Rol #${row.id_Rol ?? row.idRol}`}
+                                        </span>
+                                    </td>
+
+                                    {/* Activo (toggle rápido) */}
+                                    <td className="text-center">
+                                        <button
+                                            className={`btn btn-sm py-0 px-2 ${activo ? 'btn-success' : 'btn-outline-secondary'}`}
+                                            onClick={() => handleToggleActivo(row)}
+                                            title={activo ? 'Clic para desactivar' : 'Clic para activar'}
+                                            style={{ fontSize: 11 }}
+                                        >
+                                            <i className={`bi ${activo ? 'bi-check-circle-fill' : 'bi-x-circle'} me-1`} />
+                                            {activo ? 'Activo' : 'Inactivo'}
+                                        </button>
+                                    </td>
+
+                                    {/* Bloqueado */}
+                                    <td className="text-center">
+                                        {bloq ? (
+                                            <div className="d-flex align-items-center justify-content-center gap-1">
+                                                <span className="badge bg-danger">
+                                                    <i className="bi bi-lock-fill me-1" />Bloqueado
+                                                </span>
+                                                <button
+                                                    className="btn btn-sm btn-outline-success py-0 px-1"
+                                                    onClick={() => handleDesbloquear(id)}
+                                                    title="Desbloquear usuario"
+                                                    style={{ fontSize: 10 }}
+                                                >
+                                                    <i className="bi bi-unlock" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className="badge bg-success bg-opacity-20 text-success">
+                                                <i className="bi bi-unlock-fill me-1" />Libre
+                                            </span>
+                                        )}
+                                    </td>
+
+                                    {/* Intentos fallidos */}
+                                    <td className="text-center">
+                                        <span className={`badge ${intentos >= 3 ? 'bg-danger' : intentos > 0 ? 'bg-warning text-dark' : 'bg-light text-muted'}`}>
+                                            {intentos}
+                                        </span>
+                                    </td>
+
+                                    {/* Último acceso */}
+                                    <td className="text-muted small">
+                                        {fmtTimestamp(row.ultimo_Acceso ?? row.ultimoAcceso)}
+                                    </td>
+
+                                    {/* Vencimiento */}
+                                    <td className="text-muted small">
+                                        {row.fecha_Vencimiento ?? row.fechaVencimiento
+                                            ? fmtFecha(row.fecha_Vencimiento ?? row.fechaVencimiento)
+                                            : <span className="text-muted">Sin vencimiento</span>
+                                        }
+                                    </td>
+
+                                    {/* Acciones */}
+                                    <td>
+                                        <div className="d-flex gap-1 flex-wrap">
+
+                                            {/* Editar */}
+                                            <button
+                                                className="btn btn-sm btn-outline-primary py-0 px-2"
+                                                onClick={() => { setSelected(row); setShowModal(true) }}
+                                            >
+                                                <i className="bi bi-pencil me-1" style={{ fontSize: 11 }} />
+                                                Editar
+                                            </button>
+
+                                            {/* Eliminar con confirmación */}
+                                            {confirmId === id ? (
+                                                <>
+                                                    <span className="text-danger small align-self-center">¿Confirmar?</span>
+                                                    <button
+                                                        className="btn btn-sm btn-danger py-0 px-2"
+                                                        onClick={() => handleEliminar(id)}
+                                                    >
+                                                        Sí
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                        onClick={() => setConfirmId(null)}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button
+                                                    className="btn btn-sm btn-outline-danger py-0 px-2"
+                                                    onClick={() => setConfirmId(id)}
+                                                >
+                                                    <i className="bi bi-trash me-1" style={{ fontSize: 11 }} />
+                                                    Eliminar
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            )
+                        })}
+
+                        {datosPagina.length === 0 && (
+                            <tr>
+                                <td colSpan={10} className="text-center text-muted py-5">
+                                    <i className="bi bi-inbox fs-2 d-block mb-2" />
+                                    Sin usuarios registrados
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* ── Paginación inferior ── */}
+            <PaginacionFooter
+                paginaSegura={paginaSegura}
+                totalPaginas={totalPaginas}
+                porPagina={porPagina}
+                setPorPagina={setPorPagina}
+                irA={irA}
+                paginas={paginas}
+                totalDatos={datosFiltrados.length}
+                label="usuarios"
+                moduleColor={moduleColor}
+            />
+
+            {/* ── Modal crear / editar ── */}
+            <UsuarioModal
+                show={showModal}
+                usuario={selected}
+                onClose={() => setShowModal(false)}
+                onSaved={() => { setShowModal(false); fetchData() }}
+            />
+        </>
+    )
 }

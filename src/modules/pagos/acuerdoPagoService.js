@@ -1,5 +1,5 @@
 import axios from 'axios'
-const BASE = 'https://localhost:44352/AcuerdoPago'  // ← sin api/
+const BASE = 'https://localhost:44352/api/AcuerdoPago'  // ← sin api/
 
 export const getAllAcuerdos = ()        => axios.get(`${BASE}/get-all`)
 export const getAcuerdoById = (id)     => axios.get(`${BASE}/get-by-id/${id}`)

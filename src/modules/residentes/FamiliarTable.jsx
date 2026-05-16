@@ -125,7 +125,7 @@ export default function FamiliarTable({ moduleColor }) {
         <input className="form-control form-control-sm w-auto flex-grow-1"
           placeholder="Buscar por nombre o parentesco..."
           value={search} onChange={e => setSearch(e.target.value)} />
-        <button className="btn btn-sm text-white" style={{ background: moduleColor }}
+        <button className="btn btn-secondary" style={{ background: moduleColor }}
           onClick={abrirNuevo}>
           <i className="bi bi-plus-lg me-1" /> Nuevo Familiar
         </button>

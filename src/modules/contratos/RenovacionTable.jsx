@@ -24,9 +24,9 @@ export default function RenovacionTable({ moduleColor }) {
     setLoading(true)
     Promise.all([getRenovaciones(), getContratos(), getPropiedades()])
       .then(([rRes, cRes, pRes]) => {
-        const renovaciones = rRes.data?.data ?? []
-        const contratos    = Array.isArray(cRes.data)   ? cRes.data   : cRes.data?.data   ?? []
-        const propiedades  = pRes.data.data  ?? pRes.data   ?? pRes.data?.data   ?? []
+        const renovaciones = rRes.data ?? []
+        const contratos    = cRes.data ?? []
+        const propiedades  = pRes.data?.data   ?? []
 
         const enriched = renovaciones.map(r => {
         // Dapper serializa ID_CONTRATO → idContrato con la configuración actual
@@ -93,8 +93,8 @@ export default function RenovacionTable({ moduleColor }) {
           <tbody>
             {datosPagina.length === 0 ? (
               <tr><td colSpan={6} className="text-center text-muted py-4"><i className="bi bi-inbox me-2" />Sin renovaciones registradas</td></tr>
-            ) : datosPagina.map((row, i) => (
-              <tr key={row.id_renovacion ?? row.id_Renovacion  ?? i+1}>
+            ) : datosPagina.map((r, i) => (
+              <tr key={r.id_renovacion ?? r.id_Renovacion  ?? i+1}>
                 <td>{r.idRenovacion   ?? r.id_Renovacion  ?? i+1}</td>
                 <td>{r._labelContrato}</td>
                 <td>{(r.fechaInicio   ?? r.fecha_Inicio   ?? '').toString().slice(0,10)}</td>
@@ -110,17 +110,17 @@ export default function RenovacionTable({ moduleColor }) {
                 </td>
                   <td>
                   <div className="d-flex gap-1">
-                    <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(row); setShowModal(true) }}>
+                    <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(r); setShowModal(true) }}>
                       <i className="bi bi-pencil me-1" style={{ fontSize: 11 }} />Editar
                     </button>
-                    {confirmId === row.id ? (
+                    {confirmId === r.id_renovacion ? (
                       <>
                         <span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id_renovacion)}>Sí</button>
+                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(r.id_renovacion)}>Sí</button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button>
                       </>
                     ) : (
-                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.id)}>
+                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(r.id)}>
                         <i className="bi bi-trash me-1" style={{ fontSize: 11 }} />Eliminar
                       </button>
                     )}

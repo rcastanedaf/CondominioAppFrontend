@@ -40,11 +40,11 @@ export default function AcuerdoPagoTable({ moduleColor }) {
     Promise.all([
       getAllAcuerdos(),
       getCuentasCobrar(),
-      axios.get(`${BASE_RES}/get-all-residente`).then(r => r.data?.data ?? []),
+      axios.get(`${BASE_RES}/get-all-residente`),
     ]).then(([ac, cRes, res]) => {
-      setRows(ac.data.data      ?? ac)
-      setResidentes(res.data.data ?? res)
-      setCuentas(cRes.data?.data ?? [])
+      setRows(ac.data.data      ?? [])
+      setResidentes(res.data.data ?? [])
+      setCuentas(cRes.data ?? [])
     }).catch(() => setMsg({ type: 'danger', text: 'Error al cargar datos' }))
       .finally(() => setLoading(false))
   }, [])
@@ -153,7 +153,7 @@ export default function AcuerdoPagoTable({ moduleColor }) {
         <input className="form-control form-control-sm w-auto flex-grow-1"
           placeholder="Buscar por residente o ID..."
           value={search} onChange={e => setSearch(e.target.value)} />
-        <button className="btn btn-sm text-white" style={{ background: moduleColor }}
+        <button className="btn btn-secondary" style={{ background: moduleColor }}
           onClick={() => { setForm(EMPTY_FORM); setEditId(null); setShowModal(true) }}>
           <i className="bi bi-plus-lg me-1" /> Nuevo Acuerdo
         </button>

@@ -26,7 +26,7 @@ const modulos = [
             { to: '/cuentas-por-cobrar',     icon: 'bi-collection',        label: 'Cuentas por Cobrar' },
             { to: '/cobro-mora',             icon: 'bi-exclamation-circle',label: 'Cobro de Mora' },
             { to: '/acuerdos-pago',          icon: 'bi bi-cash-coin',         label: 'Acuerdos de Pago' },
-            { to: '/saldo-a-favor',          icon: 'bi-piggy-bank',        label: 'Saldo a Favor' },
+            //{ to: '/saldo-a-favor',          icon: 'bi-piggy-bank',        label: 'Saldo a Favor' },
         ],
     },
     {
