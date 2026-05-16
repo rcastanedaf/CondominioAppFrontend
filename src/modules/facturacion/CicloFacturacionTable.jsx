@@ -40,8 +40,8 @@ export default function CicloFacturacionTable({ moduleColor }) {
           <thead><tr><th>#</th><th>Propiedad</th><th>Tipo Servicio</th><th>Día Corte</th><th>Día Venc.</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody>
             {rows.map((row, i) => (
-              <tr key={row.id ?? i}>
-                <td className="text-muted">{row.id}</td>
+              <tr key={row.idCiclo ?? i}>
+                <td className="text-muted">{row.idCiclo}</td>
                 <td>{row.idPropiedad}</td>
                 <td>{row.idTipoServicio}</td>
                 <td>{row.diaCorte}</td>
@@ -55,7 +55,7 @@ export default function CicloFacturacionTable({ moduleColor }) {
                     </button>
                     {confirmId === row.id ? (
                       <><span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id)}>Sí</button>
+                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.idCiclo)}>Sí</button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button></>
                     ) : (
                       <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.id)}>

@@ -41,13 +41,18 @@ export default function CicloFacturacionModal({ show, onClose, onSaved, ciclo })
     setLoading(true); setError(null)
     try {
       const payload = {
-        id: ciclo ? ciclo.id : 0,
-        idPropiedad: Number(idPropiedad), idTipoServicio: Number(idTipoServicio),
-        diaCorte: Number(diaCorte), diaVencimiento: Number(diaVencimiento),
-        montoOverride: Number(montoOverride) || null, activo: Number(activo),
-        fechaInicio, fechaFin: fechaFin || null,
+        idCiclo: ciclo ? ciclo.idCiclo : 0,
+        idPropiedad: Number(idPropiedad),
+        idTipoServicio: Number(idTipoServicio),
+        diaCorte: Number(diaCorte),
+        diaVencimiento: Number(diaVencimiento),
+        montoOverride: Number(montoOverride) || null,
+        activo: Number(activo),
+        fechaInicio: fechaInicio ? `${fechaInicio}T00:00:00` : null,
+        fechaFin: fechaFin ? `${fechaFin}T00:00:00` : null,
       }
-      ciclo ? await updateCiclo(ciclo.id, payload) : await createCiclo(payload)
+      console.log(payload);
+      ciclo ? await updateCiclo(payload) : await createCiclo(payload)
       onSaved()
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }
@@ -71,8 +76,8 @@ export default function CicloFacturacionModal({ show, onClose, onSaved, ciclo })
                   <FkSelector
                     label="Propiedad" required
                     fetchFn={getPropiedades}
-                    getId={p => p.idPropiedad ?? p.id}
-                    getLabel={p => p.codigo ?? p.nombre ?? `#${p.idPropiedad ?? p.id}`}
+                    getId={p => p.id_propiedad ?? p.id}
+                    getLabel={p => p.codigo ?? p.nombre ?? `#${p.id_propiedad ?? p.id}`}
                     value={idPropiedad}
                     displayValue={labelProp}
                     onChange={(id, lbl) => { setIdProp(id); setLabelProp(lbl) }}
