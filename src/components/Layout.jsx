@@ -6,7 +6,6 @@ import Topbar  from './Topbar';
 export default function Layout() {
     const [collapsed, setCollapsed] = useState(false);
 
-    // Leer usuario desde localStorage
     const usuario = (() => {
         try {
             return JSON.parse(localStorage.getItem('usuario') ?? '{}');
@@ -16,7 +15,7 @@ export default function Layout() {
     })();
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: '#f4f6fb' }}>
+        <div style={{ display: 'flex', height: '100vh', background: '#f4f6fb', overflow: 'hidden' }}>
 
             {/* Sidebar */}
             <Sidebar
