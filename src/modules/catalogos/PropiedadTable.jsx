@@ -85,7 +85,7 @@ export default function PropiedadTable({ moduleColor }) {
                 <td className="fw-semibold">{row.codigo}</td>
                 <td>{row._tipoNombre}</td>
                 <td>{row.nivel ?? '—'}</td>
-                <td>{row.area_M2 ?? row.areaM2 ?? '—'}</td>
+                <td>{row.area_m2 ?? row.area_m2 ?? '—'}</td>
                 <td>{row.num_habitaciones ?? row.numHabitaciones ?? '—'}</td>
                 <td>{row.num_parqueos ?? row.numParqueos ?? '—'}</td>
                 <td>

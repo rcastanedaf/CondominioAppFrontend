@@ -105,14 +105,14 @@ export default function VehiculoTable({ moduleColor }) {
                     <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(r); setShowModal(true) }}>
                       <i className="bi bi-pencil me-1" style={{ fontSize: 11 }} />Editar
                     </button>
-                    {confirmId === r.id ? (
+                    {confirmId === r.id_Vehiculo ? (
                       <>
                         <span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(r.id)}>Sí</button>
+                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(r.id_Vehiculo)}>Sí</button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button>
                       </>
                     ) : (
-                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(r.id)}>
+                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(r.id_Vehiculo)}>
                         <i className="bi bi-trash me-1" style={{ fontSize: 11 }} />Eliminar
                       </button>
                     )}
@@ -175,7 +175,7 @@ function VehiculoModal({ vehiculo, onClose, onSaved }) {
         Activo:            Number(activo),
       }
       vehiculo
-        ? await updateVehiculo(vehiculo.id, { ...payload, Id: vehiculo.id })
+        ? await updateVehiculo(vehiculo.id_Vehiculo, { ...payload, Id_Vehiculo: vehiculo.id_Vehiculo })
         : await createVehiculo(payload)
       onSaved()
     } catch (e) { setError(e.response?.data?.message || e.message) }
@@ -221,30 +221,105 @@ function VehiculoModal({ vehiculo, onClose, onSaved }) {
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Placa <span className="text-danger">*</span></label>
-                  <input className="form-control" value={placa} onChange={e => setPlaca(e.target.value)} placeholder="P-123ABC" />
+                  <input 
+                    className="form-control" 
+                    value={placa} 
+                    onChange={e => {
+                      let valor = e.target.value.toUpperCase();
+
+                      valor = valor.replace(/[^A-Z0-9-]/g, '');
+
+                      const regex = /^[A-Z]?-?\d{0,3}[A-Z]{0,3}$/;
+
+                      if (regex.test(valor)) {
+                        setPlaca(valor);
+                      }
+                    }} 
+                    placeholder="P-123ABC" 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Marca</label>
-                  <input className="form-control" value={marca} onChange={e => setMarca(e.target.value)} placeholder="Toyota, Ford..." />
+                  <input 
+                    className="form-control" 
+                    value={marca} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.-]/g, '');
+
+                      setMarca(valor);
+                    }} 
+                    placeholder="Toyota, Ford..." 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Modelo</label>
-                  <input className="form-control" value={modelo} onChange={e => setModelo(e.target.value)} placeholder="Corolla, F-150..." />
+                  <input 
+                    className="form-control" 
+                    value={modelo} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]/g, '');
+
+                      setModelo(valor);
+                      //setModelo(e.target.value)
+                    }} 
+                    placeholder="Corolla, F-150..." 
+                  />
                 </div>
                 <div className="col-md-3">
                   <label className="form-label fw-semibold">Año</label>
-                  <input type="number" className="form-control" value={anio} onChange={e => setAnio(e.target.value)} placeholder="2024" />
+                  <input 
+                    type="number" 
+                    className="form-control" 
+                    value={anio} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/\D/g, '');
+
+                      if (valor.length > 4) return;
+
+                      if (valor !== '') {
+                        const num = Number(valor);
+
+                        if (num < 1900 || num > 2100) {
+                          setAnio(valor);
+                          return;
+                        }
+                      }
+
+                      setAnio(valor);
+                      //setAnio(e.target.value)
+                    }} 
+                    placeholder="2024" 
+                  />
                 </div>
                 <div className="col-md-3">
                   <label className="form-label fw-semibold">Color</label>
-                  <input className="form-control" value={color} onChange={e => setColor(e.target.value)} placeholder="Blanco, Negro..." />
+                  <input 
+                    className="form-control" 
+                    value={color} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+
+                      setColor(valor);
+                      //setColor(e.target.value)
+                    }} 
+                    placeholder="Blanco, Negro..." 
+                  />
                 </div>
                 <div className="col-md-3">
                   <label className="form-label fw-semibold">Tipo</label>
                   <select className="form-select" value={tipo} onChange={e => setTipo(e.target.value)}>
                     <option value="AUTOMOVIL">AUTOMÓVIL</option>
-                    <option value="MOTO">MOTO</option>
+                    <option value="MOTOCICLETA">MOTOCICLETA</option>
                     <option value="PICKUP">PICKUP</option>
+                    <option value="VAN">VAN</option>
                     <option value="CAMION">CAMIÓN</option>
                     <option value="OTRO">OTRO</option>
                   </select>

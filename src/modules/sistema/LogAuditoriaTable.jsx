@@ -9,13 +9,27 @@ export default function LogAuditoriaTable({ moduleColor }) {
   const [error, setError] = useState(null)
   const [top, setTop] = useState(500)
 
-  const { datosPagina, datosFiltrados, filtro, setFiltro,
-    paginaSegura, totalPaginas, porPagina, setPorPagina, irA, paginas } = usePaginacion(rows)
+  const { 
+    datosPagina, 
+    datosFiltrados, 
+    filtro, 
+    setFiltro,
+    paginaSegura, 
+    totalPaginas, 
+    porPagina, 
+    setPorPagina, 
+    irA, 
+    paginas 
+  } = usePaginacion(rows) 
 
   const fetchData = () => {
     setLoading(true)
-    getLogs(top).then(r => setRows(r.data.data ?? [])).catch(e => setError(e.message)).finally(() => setLoading(false))
+    getLogs(top)
+    .then(r => setRows(r.data ?? []))
+    .catch(e => setError(e.message))
+    .finally(() => setLoading(false))
   }
+
   useEffect(() => { fetchData() }, [top])
 
   if (loading) return <div className="text-center py-5"><div className="spinner-border spinner-border-sm" /> Cargando logs...</div>
@@ -40,8 +54,8 @@ export default function LogAuditoriaTable({ moduleColor }) {
           </thead>
           <tbody>
             {datosPagina.map((r, i) => (
-              <tr key={r.id ?? i}>
-                <td className="text-muted">{r.id}</td>
+              <tr key={r.id_Log ?? i}>
+                <td className="text-muted">{r.id_Log}</td>
                 <td>{r.username ?? '-'}</td>
                 <td>{r.modulo}</td>
                 <td>{r.accion}</td>

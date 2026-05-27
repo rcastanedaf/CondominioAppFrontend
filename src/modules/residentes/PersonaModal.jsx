@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPersona, updatePersona } from './personaService'
 
-const TIPOS = ['PROPIETARIO', 'RESIDENTE', 'ARRENDATARIO', 'FAMILIAR', 'EMPLEADO', 'OTRO']
+const TIPOS = ['PROPIETARIO','INQUILINO','EMPLEADO','VISITANTE','PROVEEDOR_CONTACTO']
 
 export default function PersonaModal({ show, onClose, onSaved, persona }) {
   const [tipo,          setTipo]        = useState('RESIDENTE')
@@ -26,7 +26,11 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
       setApellidos(persona.apellidos ?? '')
       setDpi(persona.dpi ?? '')
       setPasaporte(persona.pasaporte ?? '')
-      setFechaNac(persona.fechaNacimiento ? persona.fechaNacimiento.substring(0, 10) : '')
+      setFechaNac(
+        persona.fechaNacimiento
+          ? new Date(persona.fechaNacimiento).toISOString().split('T')[0]
+          : ''
+      )
       setTelefPpal(persona.telefonoPrincipal ?? '')
       setTelefSec(persona.telefonoSecundario ?? '')
       setEmail(persona.email ?? '')
@@ -46,6 +50,9 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
   if (!apellidos.trim()) return setError('Los apellidos son requeridos')
   if (!tipo)             return setError('El tipo es requerido')
   if (!fechaNac)         return setError('La fecha de nacimiento es requerida')
+  if (dpi.length !== 13) {
+    return setError('El DPI debe tener exactamente 13 dígitos');
+  }
 
   setLoading(true); setError(null)
 
@@ -58,7 +65,7 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
         Apellidos:           apellidos,
         DPI:                 dpi || '',
         Pasaporte:           pasaporte || '',
-        Fecha_Nacimiento:    fechaNac,
+        Fecha_Nacimiento: new Date(fechaNac).toISOString(),
         Id_Estado_Civil:     1,
         Nacionalidad:        1,
         Telefono_Principal:  telefPpal || '',
@@ -69,7 +76,8 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
         Observaciones:       observaciones || '',
         Activo:              Number(activo),
       }
-      await updatePersona(persona.id, payload)  // ✅ usa persona.id
+      console.log(payload);
+      await updatePersona(persona.id, payload) 
       } else {
       const payload = {
         Tipo:                tipo,
@@ -77,7 +85,7 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
         Apellidos:           apellidos,
         DPI:                 dpi || '',
         Pasaporte:           pasaporte || '',
-        Fecha_Nacimiento:    fechaNac,
+        Fecha_Nacimiento: new Date(fechaNac).toISOString(),
         Id_Estado_Civil:     1,
         Nacionalidad:        1,
         Telefono_Principal:  telefPpal || '',
@@ -120,39 +128,145 @@ export default function PersonaModal({ show, onClose, onSaved, persona }) {
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Nombres <span className="text-danger">*</span></label>
-                  <input className="form-control" value={nombres} onChange={e => setNombres(e.target.value)} autoFocus />
+                  <input 
+                    className="form-control" 
+                    value={nombres} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                      setNombres(valor);
+                      //setNombres(e.target.value)
+                    }} 
+                    autoFocus 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Apellidos <span className="text-danger">*</span></label>
-                  <input className="form-control" value={apellidos} onChange={e => setApellidos(e.target.value)} />
+                  <input 
+                    className="form-control" 
+                    value={apellidos} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                      setApellidos(valor);
+                      //setApellidos(e.target.value)
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">DPI</label>
-                  <input className="form-control" placeholder="0000 00000 0000" value={dpi} onChange={e => setDpi(e.target.value)} />
+                  <input 
+                    className="form-control" 
+                    placeholder="0000 00000 0000" 
+                    value={dpi}
+                    maxLength={13}
+                    onChange={e => {
+                      let valor = e.target.value.replace(/\D/g, '');
+
+                      if (valor.length > 13) valor = valor.slice(0, 13);
+
+                      if (valor.length > 4 && valor.length <= 9) {
+                        valor = valor.replace(/^(\d{4})(\d+)/, '$1 $2');
+                      } else if (valor.length > 9) {
+                        valor = valor.replace(/^(\d{4})(\d{5})(\d+)/, '$1 $2 $3');
+                      }
+
+                      setDpi(valor);
+                      //setDpi(e.target.value)
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Pasaporte</label>
-                  <input className="form-control" value={pasaporte} onChange={e => setPasaporte(e.target.value)} />
+                  <input 
+                    className="form-control" 
+                    value={pasaporte} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/[^a-zA-Z0-9]/g, '');
+
+                      setPasaporte(valor);
+                      //setPasaporte(e.target.value);
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Fecha Nacimiento <span className="text-danger">*</span></label>
-                  <input type="date" className="form-control" value={fechaNac} onChange={e => setFechaNac(e.target.value)} />
+                  <input 
+                    type="date" 
+                    className="form-control" 
+                    value={fechaNac}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={e => {
+                      setFechaNac(e.target.value);
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Teléfono Principal</label>
-                  <input className="form-control" value={telefPpal} onChange={e => setTelefPpal(e.target.value)} />
+                  <input 
+                    className="form-control" 
+                    value={telefPpal} 
+                    maxLength={8}
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/\D/g, '');
+
+                      setTelefPpal(valor);
+                      //setTelefPpal(e.target.value)
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Teléfono Secundario</label>
-                  <input className="form-control" value={telefSec} onChange={e => setTelefSec(e.target.value)} />
+                  <input 
+                    className="form-control" 
+                    value={telefSec} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/\D/g, '');
+
+                      setTelefSec(valor);
+                      //setTelefSec(e.target.value)
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Email</label>
-                  <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} />
+                  <input 
+                    type="email" 
+                    className="form-control" 
+                    value={email} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/\s/g, '').toLowerCase();
+
+                      setEmail(valor);
+                      //setEmail(e.target.value)
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">NIT</label>
-                  <input className="form-control" value={nit} onChange={e => setNit(e.target.value)} />
+                  <input 
+                    className="form-control" 
+                    maxLength={12}
+                    value={nit} 
+                    onChange={e => {
+                      let valor = e.target.value;
+
+                      valor = valor.replace(/\D/g, '');
+
+                      setNit(valor);
+                      //setNit(e.target.value)
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Estado</label>

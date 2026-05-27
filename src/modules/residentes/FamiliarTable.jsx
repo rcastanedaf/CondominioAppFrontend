@@ -33,7 +33,7 @@ export default function FamiliarTable({ moduleColor }) {
     // Todos devuelven axios response → .data = { success, message, data: [...] }
     setRows(       famRes.data?.data ?? [])
     setResidentes( resRes.data?.data ?? [])
-    setParentescos(parRes.data?.data ?? [])
+    setParentescos(parRes.data ?? [])
     setPersonas(   perRes.data?.data ?? [])
   })
   .catch(() => setMsg({ type: 'danger', text: 'Error al cargar datos' }))
@@ -226,12 +226,19 @@ export default function FamiliarTable({ moduleColor }) {
                 )}
 
                 <label className="form-label fw-semibold">Parentesco</label>
-                <select className="form-select form-select-sm mb-3"
+                <select 
+                  className="form-select form-select-sm mb-3"
                   value={form.idParentesco}
-                  onChange={e => setForm(f => ({ ...f, idParentesco: e.target.value }))}>
+                  onChange={e => setForm(f => ({ ...f, idParentesco: e.target.value }))}
+                >
                   <option value="">Sin especificar</option>
                   {parentescos.map(p => (
-                    <option key={p.id ?? p.Id} value={p.id ?? p.Id}>{p.nombre ?? p.Nombre}</option>
+                    <option 
+                      key={p.id ?? p.Id} 
+                      value={p.id ?? p.Id}
+                    >
+                      {p.nombre ?? p.Nombre}
+                    </option>
                   ))}
                 </select>
 
@@ -257,7 +264,7 @@ export default function FamiliarTable({ moduleColor }) {
                 <button className="btn btn-sm btn-secondary" onClick={() => setShowModal(false)}>
                   Cancelar
                 </button>
-                <button className="btn btn-sm text-white" style={{ background: moduleColor }}
+                <button className="btn btn-sm text-white" style={{ background: moduleColor || '#0d6efd' }}
                   onClick={guardar} disabled={saving}>
                   {saving ? <span className="spinner-border spinner-border-sm" /> : 'Guardar'}
                 </button>

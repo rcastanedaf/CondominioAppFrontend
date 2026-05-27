@@ -53,6 +53,7 @@ export default function ResidenteModal({ show, onClose, onSaved, residente }) {
         Activo:         Number(activo),
         Observaciones:  observaciones || '',
       }
+      console.log(payload);
       residente
         ? await updateResidente(residente.id, payload)
         : await createResidente(payload)

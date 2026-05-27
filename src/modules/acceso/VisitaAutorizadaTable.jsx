@@ -78,9 +78,18 @@ export default function VisitaAutorizadaTable({ moduleColor }) {
         <table className="table table-hover cms-table">
           <thead>
             <tr>
-              <th>#</th><th>Visitante</th><th>DPI</th><th>Residente</th>
-              <th>Propiedad</th><th>Motivo</th><th>Tipo</th><th>Placa</th>
-              <th>Desde</th><th>Hasta</th><th>Estado</th><th>Acciones</th>
+              <th>#</th>
+              <th>Visitante</th>
+              <th>DPI</th>
+              <th>Residente</th>
+              <th>Propiedad</th>
+              <th>Motivo</th>
+              <th>Tipo</th>
+              <th>Placa</th>
+              <th>Desde</th>
+              <th>Hasta</th>
+              <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -88,7 +97,7 @@ export default function VisitaAutorizadaTable({ moduleColor }) {
               <tr><td colSpan={12} className="text-center text-muted py-4"><i className="bi bi-inbox me-2" />Sin visitas registradas</td></tr>
             ) : datosPagina.map((r, i) => (
               <tr key={r.id ?? i}>
-                <td className="text-muted">{r.id}</td>
+                <td className="text-muted">{r.id_Visita}</td>
                 <td className="fw-semibold">{r.nombre_Visitante ?? r.nombreVisitante}</td>
                 <td className="text-muted small">{r.dpi_Visitante ?? r.dpiVisitante ?? '—'}</td>
                 <td>{r._nombreResidente}</td>
@@ -145,18 +154,107 @@ function VisitaModal({ visita, onClose, onSaved }) {
   const [loading,        setLoading]    = useState(false)
   const [error,          setError]      = useState(null)
 
+  // Estados para errores específicos de cada campo
+  const [nombreError, setNombreError] = useState('')
+  const [dpiError, setDpiError] = useState('')
+  const [placaError, setPlacaError] = useState('')
+
+  // Funciones de validación
+  const validarNombre = (nombre) => {
+    if (!nombre.trim()) {
+      setNombreError('El nombre es requerido')
+      return false
+    }
+    const regexNombre = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,}$/
+    if (!regexNombre.test(nombre)) {
+      setNombreError('Solo letras y mínimo 2 caracteres')
+      return false
+    }
+    setNombreError('')
+    return true
+  }
+
+  const validarDPI = (dpi) => {
+    if (dpi === '') {
+      setDpiError('')
+      return true // DPI es opcional
+    }
+    const regexDPI = /^\d{13}$/
+    if (!regexDPI.test(dpi)) {
+      setDpiError('Debe tener 13 dígitos numéricos')
+      return false
+    }
+    setDpiError('')
+    return true
+  }
+
+  const validarPlaca = (placa) => {
+    if (placa === '') {
+      setPlacaError('')
+      return true // Placa es opcional
+    }
+    // Formato guatemalteco: letra-guion-3letras o letra-guion-3números
+    const regexPlaca = /^[A-Za-z]-[A-Za-z0-9]{3}[A-Za-z0-9]?$/
+    if (!regexPlaca.test(placa.toUpperCase())) {
+      setPlacaError('Formato inválido (ej: P-123ABC, M-456D)')
+      return false
+    }
+    setPlacaError('')
+    return true
+  }
+
+  // Handlers con validación en tiempo real
+  const handleNombreChange = (e) => {
+    const valor = e.target.value
+    setNombre(valor)
+    validarNombre(valor)
+  }
+
+  const handleDpiChange = (e) => {
+    const valor = e.target.value
+    // Solo permitir números
+    if (/^\d*$/.test(valor) && valor.length <= 13) {
+      setDpi(valor)
+      validarDPI(valor)
+    }
+  }
+
+  const handlePlacaChange = (e) => {
+    const valor = e.target.value.toUpperCase()
+    setPlaca(valor)
+    validarPlaca(valor)
+  }
+
   const handleSubmit = async () => {
-    if (!nombreVisitante.trim()) { setError('El nombre del visitante es requerido'); return }
-    if (!idResidente)            { setError('El residente es requerido'); return }
-    if (fechaDesde && fechaHasta && new Date(fechaHasta) < new Date(fechaDesde))
-      return setError('La fecha de fin no puede ser anterior a la fecha de inicio')
-    setLoading(true); setError(null)
+    // Validar todos los campos antes de enviar
+    const esNombreValido = validarNombre(nombreVisitante)
+    const esDpiValido = validarDPI(dpiVisitante)
+    const esPlacaValida = validarPlaca(placaVehiculo)
+
+    if (!esNombreValido || !esDpiValido || !esPlacaValida) {
+      setError('Por favor corrige los campos marcados')
+      return
+    }
+
+    if (!idResidente) {
+      setError('El residente es requerido')
+      return
+    }
+
+    if (fechaDesde && fechaHasta && new Date(fechaHasta) < new Date(fechaDesde)) {
+      setError('La fecha de fin no puede ser anterior a la fecha de inicio')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
     try {
       const payload = {
         Id_Residente:      Number(idResidente),
         Id_Propiedad:      idPropiedad  ? Number(idPropiedad)  : null,
         Id_Motivo_Visita:  idMotivoVisita ? Number(idMotivoVisita) : null,
-        Nombre_Visitante:  nombreVisitante,
+        Nombre_Visitante:  nombreVisitante.trim(),
         Dpi_Visitante:     dpiVisitante  || null,
         Placa_Vehiculo:    placaVehiculo || null,
         Fecha_Desde:       fechaDesde   || null,
@@ -168,11 +266,14 @@ function VisitaModal({ visita, onClose, onSaved }) {
         Observaciones:     observaciones || null,
       }
       visita
-        ? await updateVisita(visita.id, { ...payload, Id: visita.id })
+        ? await updateVisita(visita.id_Visita, { ...payload, Id: visita.id_Visita })
         : await createVisita(payload)
       onSaved()
-    } catch (e) { setError(e.response?.data?.message || e.message) }
-    finally { setLoading(false) }
+    } catch (e) {
+      setError(e.response?.data?.message || e.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -224,19 +325,63 @@ function VisitaModal({ visita, onClose, onSaved }) {
                     placeholder="Selecciona motivo..."
                   />
                 </div>
+                
+                {/* Campo Nombre Visitante con validación */}
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Nombre Visitante <span className="text-danger">*</span></label>
-                  <input className="form-control" value={nombreVisitante} onChange={e => setNombre(e.target.value)} />
+                  <label className="form-label fw-semibold">
+                    Nombre Visitante <span className="text-danger">*</span>
+                  </label>
+                  <input 
+                    className={`form-control ${nombreError ? 'is-invalid' : ''}`}
+                    value={nombreVisitante} 
+                    onChange={handleNombreChange}
+                    onBlur={() => validarNombre(nombreVisitante)}
+                  />
+                  {nombreError && (
+                    <div className="invalid-feedback d-block">
+                      <i className="bi bi-exclamation-triangle-fill me-1" />{nombreError}
+                    </div>
+                  )}
                 </div>
-                <div className="col-md-4">
+
+                {/* Campo DPI Visitante con validación */}
+                <div className="col-md-3">
                   <label className="form-label fw-semibold">DPI Visitante</label>
-                  <input className="form-control" value={dpiVisitante} onChange={e => setDpi(e.target.value)} />
+                  <input 
+                    className={`form-control ${dpiError ? 'is-invalid' : ''}`}
+                    value={dpiVisitante} 
+                    onChange={handleDpiChange}
+                    onBlur={() => validarDPI(dpiVisitante)}
+                    placeholder="1234567890123"
+                    maxLength={13}
+                  />
+                  {dpiError && (
+                    <div className="invalid-feedback d-block">
+                      <i className="bi bi-exclamation-triangle-fill me-1" />{dpiError}
+                    </div>
+                  )}
+                  <small className="text-muted">Opcional - 13 dígitos</small>
                 </div>
-                <div className="col-md-4">
+
+                {/* Campo Placa Vehículo con validación */}
+                <div className="col-md-3">
                   <label className="form-label fw-semibold">Placa Vehículo</label>
-                  <input className="form-control" value={placaVehiculo} onChange={e => setPlaca(e.target.value)} placeholder="P-123ABC" />
+                  <input 
+                    className={`form-control ${placaError ? 'is-invalid' : ''}`}
+                    value={placaVehiculo} 
+                    onChange={handlePlacaChange}
+                    onBlur={() => validarPlaca(placaVehiculo)}
+                    placeholder="P-123ABC"
+                  />
+                  {placaError && (
+                    <div className="invalid-feedback d-block">
+                      <i className="bi bi-exclamation-triangle-fill me-1" />{placaError}
+                    </div>
+                  )}
+                  <small className="text-muted">Opcional - Formato: L-123ABC</small>
                 </div>
-                <div className="col-md-4">
+
+                <div className="col-md-3">
                   <label className="form-label fw-semibold">Tipo</label>
                   <select className="form-select" value={tipo} onChange={e => setTipo(e.target.value)}>
                     <option value="UNICA">ÚNICA</option>

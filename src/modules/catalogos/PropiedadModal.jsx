@@ -13,7 +13,7 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
   const [numHabitaciones,  setNumHab]      = useState('')
   const [numParqueos,      setNumParq]     = useState('')
   const [estado,           setEstado]      = useState('DISPONIBLE')
-  const [descripcion,      setDescripcion] = useState('')
+  //const [descripcion,      setDescripcion] = useState('')
   const [loading,          setLoading]     = useState(false)
   const [error,            setError]       = useState(null)
   const [labelTipo, setLabelTipo] = useState('')
@@ -24,15 +24,21 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
       setIdTipo(propiedad.id_tipo_propiedad ?? '')
       setCodigo(propiedad.codigo ?? '')
       setNivel(propiedad.nivel ?? '')
-      setAreaM2(propiedad.area_M2 ?? '')
+      setAreaM2(propiedad.area_m2 ?? '')
       setNumHab(propiedad.num_habitaciones ?? '')
       setNumParq(propiedad.num_parqueos ?? '')
       setEstado(propiedad.estado ?? 'DISPONIBLE')
-      setDescripcion(propiedad.descripcion ?? '')
+      //setDescripcion(propiedad.descripcion ?? '')
       setLabelTipo('')
     } else {
-      setIdTipo(''); setCodigo(''); setNivel(''); setAreaM2('')
-      setNumHab(''); setNumParq(''); setEstado('DISPONIBLE'); setDescripcion('')
+      setIdTipo(''); 
+      setCodigo(''); 
+      setNivel(''); 
+      setAreaM2('')
+      setNumHab(''); 
+      setNumParq(''); 
+      setEstado('DISPONIBLE'); 
+      //setDescripcion('')
       setLabelTipo('')
     }
     setError(null)
@@ -41,20 +47,26 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
   const handleSubmit = async () => {
     if (!codigo.trim()) return setError('El código es requerido')
     if (!estado)        return setError('El estado es requerido')
+    if (!areaM2)        return setError('El area es requerida')
+    if (!numParqueos)   return setError('El numero de parqueos es requerido')
     setLoading(true); setError(null)
+
     try {
       const payload = {
         id: propiedad ? propiedad.id_propiedad : 0,
-        id_tipo_propiedad: Number(idTipoPropiedad) || null,
-        codigo, nivel: Number(nivel) || null,
-        areaM2: Number(areaM2) || null,
-        num_habitaciones: Number(numHabitaciones) || null,
-        num_parqueos: Number(numParqueos) || null,
-        estado, descripcion,
+        id_tipo_propiedad: Number(idTipoPropiedad),
+        codigo, nivel: Number(nivel),
+        area_m2: Number(areaM2),
+        num_habitaciones: Number(numHabitaciones),
+        num_parqueos: Number(numParqueos),
+        estado
       }
+      console.log(payload);
       propiedad ? await updatePropiedad(propiedad.id_propiedad, payload) : await createPropiedad(payload)
       onSaved()
-    } catch (err) { setError(err.message) }
+    } catch (err) { 
+      setError(err.message) 
+    }
     finally { setLoading(false) }
   }
 
@@ -86,15 +98,52 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
                 </div>
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Código <span className="text-danger">*</span></label>
-                  <input className="form-control" placeholder="Ej. APT-101" value={codigo} onChange={e => setCodigo(e.target.value)} autoFocus />
+                  <input 
+                    className="form-control" 
+                    placeholder="Ej. APT-101" 
+                    value={codigo} 
+                    onChange={e => {
+                      const valor = e.target.value;
+
+                      if(/^[a-zA-Z0-9-]*$/.test(valor)){
+                        setCodigo(e.target.value);
+                      }
+                    }} 
+                    autoFocus 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Nivel</label>
-                  <input type="number" className="form-control" placeholder="1" value={nivel} onChange={e => setNivel(e.target.value)} />
+                  <input 
+                    type="number" 
+                    className="form-control" 
+                    placeholder="1" 
+                    value={nivel} 
+                    onChange={e => {
+                      const valor = e.target.value;
+                      
+                      if(valor > 0){
+                        setNivel(e.target.value);
+                      }
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Área (m²)</label>
-                  <input type="number" step="0.01" className="form-control" placeholder="0.00" value={areaM2} onChange={e => setAreaM2(e.target.value)} />
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    className="form-control" 
+                    placeholder="1.00" 
+                    value={areaM2} 
+                    onChange={e => {
+                      const valor = e.target.value;
+                      
+                      if(Number(valor) > 0){
+                        setAreaM2(e.target.value);
+                      }
+                    }} 
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Estado <span className="text-danger">*</span></label>
@@ -104,20 +153,40 @@ export default function PropiedadModal({ show, onClose, onSaved, propiedad }) {
                 </div>
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Núm. Habitaciones</label>
-                  <input type="number" className="form-control" placeholder="0" value={numHabitaciones} onChange={e => setNumHab(e.target.value)} />
+                  <input 
+                    type="number" 
+                    className="form-control" 
+                    placeholder="1" 
+                    value={numHabitaciones} 
+                    onChange={e => {
+                      const valor = e.target.value;
+                      
+                      if(valor > 0){
+                        setNumHab(e.target.value);
+                      }
+                    }} 
+                  />
                 </div>
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Núm. Parqueos</label>
-                  <input type="number" className="form-control" placeholder="0" value={numParqueos} onChange={e => setNumParq(e.target.value)} />
-                </div>
-                <div className="col-12">
-                  <label className="form-label fw-semibold">Descripción</label>
-                  <textarea className="form-control" rows={2} value={descripcion} onChange={e => setDescripcion(e.target.value)} />
+                  <input 
+                    type="number" 
+                    className="form-control" 
+                    placeholder="0" 
+                    value={numParqueos} 
+                    onChange={e => {
+                      const valor = e.target.value;
+                      
+                      if(valor >= 0){
+                        setNumParq(e.target.value);
+                      }
+                    }} 
+                  />
                 </div>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-outline-secondary" onClick={onClose} disabled={loading}>Cancelar</button>
+              <button className="btn btn-outline-danger" onClick={onClose} disabled={loading}>X</button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
                 {loading ? <><span className="spinner-border spinner-border-sm me-2" />Guardando...</> : propiedad ? 'Guardar cambios' : 'Crear'}
               </button>
