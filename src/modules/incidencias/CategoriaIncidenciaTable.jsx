@@ -57,31 +57,33 @@ export default function CategoriaIncidenciaTable({ moduleColor }) {
       />
       <div className="cms-table-wrap" style={{ overflowY: 'auto' }}>
         <table className="table table-hover cms-table">
-          <thead><tr><th>#</th><th>Nombre</th><th>Descripción</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Prioridad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
           <tbody>
             {datosPagina.map((row, i) => (
-              <tr key={row.id ?? i}>
-                <td className="text-muted">{row.id}</td>
+              <tr key={row.idCategoria ?? i}>
+                <td className="text-muted">{row.idCategoria}</td>
                 <td className="fw-semibold">{row.nombre}</td>
                 <td className="text-muted" style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {row.descripcion ?? '—'}
-                </td>
-                <td>
-                  <span className={`badge ${row.activo === 1 ? 'text-bg-success' : 'text-bg-secondary'}`}>
-                    {row.activo === 1 ? 'Activo' : 'Inactivo'}
-                  </span>
+                  {row.prioridadDefault ?? '—'}
                 </td>
                 <td>
                   <div className="d-flex gap-1">
                     <button className="btn btn-sm btn-outline-primary py-0 px-2" onClick={() => { setSelected(row); setShowModal(true) }}>
                       <i className="bi bi-pencil me-1" style={{ fontSize: 11 }} />Editar
                     </button>
-                    {confirmId === row.id ? (
+                    {confirmId === row.idCategoria ? (
                       <><span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.id)}>Sí</button>
+                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(row.idCategoria)}>Sí</button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button></>
                     ) : (
-                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.id)}>
+                      <button className="btn btn-sm btn-outline-danger py-0 px-2" onClick={() => setConfirmId(row.idCategoria)}>
                         <i className="bi bi-trash me-1" style={{ fontSize: 11 }} />Eliminar
                       </button>
                     )}

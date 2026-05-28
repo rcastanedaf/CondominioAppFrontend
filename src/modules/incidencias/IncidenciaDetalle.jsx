@@ -158,10 +158,16 @@ export default function IncidenciaDetalle({ modColor = '#dc3545', onRegisterTask
           <table className="table table-hover table-sm cms-table mb-0" style={{ fontSize: 12 }}>
             <thead className="table-light">
               <tr>
-                <th style={{ width: 30 }} /><th>#</th><th>Título</th><th>Prioridad</th>
-                <th>Estado</th><th>Categoría</th><th>Propiedad</th>
-                <th>F. Apertura</th><th>F. Resolución</th>
-                <th className="text-end">Costo Est.</th><th className="text-end">Costo Real</th><th>Acciones</th>
+                <th style={{ width: 30 }} />
+                <th>#</th>
+                <th>Título</th>
+                <th>Prioridad</th>
+                <th>Estado</th>
+                <th>Categoría</th>
+                <th>Propiedad</th>
+                <th className="text-end">Costo Est.</th>
+                <th className="text-end">Costo Real</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -182,8 +188,6 @@ export default function IncidenciaDetalle({ modColor = '#dc3545', onRegisterTask
                   <td><span className={`badge text-bg-${ESTADO_COLOR[inc.estado] || 'secondary'}`}>{inc.estado}</span></td>
                   <td className="text-muted">{inc.idCategoria ?? '—'}</td>
                   <td className="text-muted">{inc.idPropiedad ?? '—'}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{inc.fechaApertura?.substring(0, 10) ?? '—'}</td>
-                  <td className="text-muted" style={{ whiteSpace: 'nowrap' }}>{inc.fechaResolucion?.substring(0, 10) ?? '—'}</td>
                   <td className="text-end">{inc.costoEstimado ? fmt(inc.costoEstimado) : '—'}</td>
                   <td className="text-end">{inc.costoReal ? fmt(inc.costoReal) : '—'}</td>
                   <td onClick={ev => ev.stopPropagation()}>
