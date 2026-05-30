@@ -340,13 +340,13 @@ export default function PagoModal({ show, onClose, onSaved, pago, facturaInicial
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-outline-secondary" onClick={onClose} disabled={loading}>
+              <button className="btn btn-sm btn-secondary" onClick={onClose} disabled={loading}>
                 Cancelar
               </button>
-              <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || camposFaltantes.length > 0}>
+              <button className="btn btn-sm btn-primary" onClick={handleSubmit} disabled={loading || camposFaltantes.length > 0}>
                 {loading
-                  ? <><span className="spinner-border spinner-border-sm me-2" />Guardando...</>
-                  : pago ? 'Guardar cambios' : 'Crear Pago'}
+                  ? <span className="spinner-border spinner-border-sm" />
+                  : pago ? 'Guardar Cambios' : 'Crear Pago'}
               </button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import axios from 'axios'
-const BASE = 'http://localhost:5002/EspacioComun'
+const BASE = 'https://localhost:44352/EspacioComun'
 export const getEspacios      = ()         => axios.get(`${BASE}/get-all`)
 export const createEspacio    = (data)     => axios.post(`${BASE}/create`, data)
 export const updateEspacio    = (id, data) => axios.put(`${BASE}/update/${id}`, data)
