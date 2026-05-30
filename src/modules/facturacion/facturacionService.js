@@ -5,6 +5,7 @@ const BASE = 'https://localhost:44352'
 export const getFacturas            = ()          => axios.get(`${BASE}/Factura/get-all`)
 export const getFacturaById         = (id)        => axios.get(`${BASE}/Factura/get-by-id/${id}`)
 export const getFacturasByPropiedad = (id)        => axios.get(`${BASE}/Factura/get-by-propiedad/${id}`)
+export const getNextCorrelative     = ()          => axios.get(`${BASE}/Factura/get-next-correlative`)
 export const createFactura          = (data)      => axios.post(`${BASE}/Factura/create`, data)
 export const updateFactura          = (data)      => axios.put(`${BASE}/Factura/update`, data)   // id en body
 export const deleteFactura          = (id)        => axios.delete(`${BASE}/Factura/delete/${id}`)

@@ -101,7 +101,7 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
             id_Propiedad:  r.id_Propiedad  ?? r.Id_Propiedad,
             tipoResidente: r.tipo_Residente ?? r.Tipo_Residente ?? r.tipoResidente,
             fechaIngreso:  r.fecha_Ingreso  ?? r.Fecha_Ingreso,
-            estado:        r.estado ?? r.Estado,
+            activo:        r.activo         ?? r.Activo,
             observaciones: r.observaciones  ?? r.Observaciones,
             nombres:       persona?.nombres      ?? persona?.Nombres      ?? `(Persona #${r.id_Persona ?? r.Id_Persona})`,
             apellidos:     persona?.apellidos    ?? persona?.Apellidos    ?? '',
@@ -111,7 +111,7 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
           }
         })
 
-        setResidentes(enriched)
+        setResidentes(enriched.filter(r => r.activo === 1))
       })
       .catch(err => setErrorRes(err.message))
       .finally(() => setLoadingRes(false))
@@ -166,8 +166,8 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
     if (resSeleccionado) {
       getPagosByResidente(resSeleccionado.id)
         .then(res => {
-          const lista = Array.isArray(res.data.data) ? res.data : res.data?.data ?? []
-          setPagos(lista.map(normalizePago))  // ✅ usa helper centralizado
+          const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+          setPagos(lista.map(normalizePago))
         })
         .catch(err => setErrorPag(err.message))
     }
@@ -289,7 +289,7 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
                     <td className="text-muted">{r.dpi}</td>
                     <td>
                       <span className="badge text-bg-light border" style={{ fontSize: 10 }}>
-                        {r.idPropiedad ?? '—'}
+                        {r.id_Propiedad ?? '—'}
                       </span>
                     </td>
                     <td>
@@ -297,7 +297,7 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
                         {r.tipoResidente}
                       </span>
                     </td>
-                    <td>{r.telefonoPrincipal ?? '—'}</td>
+                    <td>{r.telefono ?? '—'}</td>
                     <td>
                       <span className={`badge text-bg-${r.activo === 1 ? 'success' : 'secondary'}`}>
                         {r.activo === 1 ? 'Activo' : 'Inactivo'}
@@ -478,6 +478,7 @@ export default function PagosResidente({ modColor = '#0dcaf0', onRegisterTaskHan
       <PagoModal
         show={showModal}
         pago={pagoEdit}
+        residente={resSeleccionado}
         onClose={() => setShowModal(false)}
         onSaved={handleSaved}
       />

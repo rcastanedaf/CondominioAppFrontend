@@ -33,11 +33,11 @@ export default function CobroMoraTable({ moduleColor }) {
       getPersonas(),
     ])
       .then(([cRes, ccRes, rRes, perRes]) => {
-        // ── Extracción correcta con fallback ──────────────────────────
-        const cobros     = cRes.data?.data    ?? []
-        const cuentas    = ccRes.data?.data   ?? []
-        const residentes = rRes.data?.data    ?? []
-        const personas   = perRes.data?.data  ?? []
+        const toArr = r => Array.isArray(r.data) ? r.data : r.data?.data ?? r.data?.Data ?? []
+        const cobros     = toArr(cRes)
+        const cuentas    = toArr(ccRes)
+        const residentes = toArr(rRes)
+        const personas   = toArr(perRes)
 
         const enriched = cobros.map(c => {
           // El modelo usa PascalCase → Dapper lo serializa a camelCase en la respuesta JSON

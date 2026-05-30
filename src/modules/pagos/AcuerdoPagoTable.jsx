@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getAllAcuerdos, getCuotas, createAcuerdo, updateAcuerdo, pagarCuota, deleteAcuerdo } from './acuerdoPagoService'
 import axios from 'axios'
-import { getCuentasCobrar } from './cuentaCobrarService'
+import { getCuentasByResidente } from './cuentaCobrarService'
+import { getPersonas } from './residentePagoService'
+import { getPropiedades } from '../catalogos/propiedadService'
 
 
 const BASE_RES = 'https://localhost:44352/Residente'
@@ -30,26 +32,55 @@ export default function AcuerdoPagoTable({ moduleColor }) {
   const [editId,     setEditId]     = useState(null)
   const [form,       setForm]       = useState(EMPTY_FORM)
   const [search,     setSearch]     = useState('')
-  const [saving,     setSaving]     = useState(false)
-  const [msg,        setMsg]        = useState(null)
-  const [acuerdoSel, setAcuerdoSel] = useState(null)
-  const [cuentas, setCuentas] = useState([])
+  const [saving,          setSaving]          = useState(false)
+  const [msg,             setMsg]             = useState(null)
+  const [acuerdoSel,      setAcuerdoSel]      = useState(null)
+  const [cuentasFiltradas, setCuentasFiltradas] = useState([])
+  const [loadingCuentas,  setLoadingCuentas]  = useState(false)
 
   const cargar = useCallback(() => {
     setLoading(true)
     Promise.all([
       getAllAcuerdos(),
-      getCuentasCobrar(),
       axios.get(`${BASE_RES}/get-all-residente`),
-    ]).then(([ac, cRes, res]) => {
-      setRows(ac.data.data      ?? [])
-      setResidentes(res.data.data ?? [])
-      setCuentas(cRes.data ?? [])
+      getPersonas(),
+      getPropiedades(),
+    ]).then(([ac, res, perRes, propRes]) => {
+      setRows(ac.data.data ?? [])
+      const personas    = perRes.data?.data  ?? []
+      const propiedades = propRes.data?.data ?? []
+      const enriched = (res.data.data ?? []).map(r => {
+        const idPersona    = r.id_Persona   ?? r.Id_Persona   ?? r.idPersona
+        const idPropiedad  = r.id_Propiedad ?? r.Id_Propiedad ?? r.idPropiedad
+        const persona      = personas.find(p => (p.id_Persona   ?? p.Id_Persona   ?? p.idPersona)    === idPersona)
+        const propiedad    = propiedades.find(p => (p.id_propiedad ?? p.idPropiedad) === idPropiedad)
+        const id = r.id_Residente ?? r.idResidente
+        const nombre = persona
+          ? `${persona.nombres ?? persona.Nombres ?? ''} ${persona.apellidos ?? persona.Apellidos ?? ''}`.trim()
+          : `Residente #${id}`
+        const propLabel = propiedad
+          ? `#${idPropiedad} - ${propiedad.codigo}`
+          : `#${idPropiedad ?? '—'}`
+        return { ...r, id, label: `${nombre} | ${propLabel}` }
+      })
+      setResidentes(enriched)
     }).catch(() => setMsg({ type: 'danger', text: 'Error al cargar datos' }))
       .finally(() => setLoading(false))
   }, [])
 
   useEffect(() => { cargar() }, [cargar])
+
+  useEffect(() => {
+    if (!form.idResidente || editId) {
+      setCuentasFiltradas([])
+      return
+    }
+    setLoadingCuentas(true)
+    getCuentasByResidente(form.idResidente)
+      .then(res => setCuentasFiltradas(res.data.data ?? res.data ?? []))
+      .catch(() => setMsg({ type: 'danger', text: 'Error al cargar cuentas del residente' }))
+      .finally(() => setLoadingCuentas(false))
+  }, [form.idResidente, editId])
 
   const abrirCuotas = async (acuerdo) => {
     setAcuerdoSel(acuerdo)
@@ -88,8 +119,9 @@ export default function AcuerdoPagoTable({ moduleColor }) {
   setSaving(true)
   try {
     if (editId) {
+      const estadoValido = ['ACTIVO','COMPLETADO','INCUMPLIDO','CANCELADO']
       await updateAcuerdo(editId, {
-        estado:        form.estado ?? 'ACTIVO',
+        estado:        estadoValido.includes(form.estado) ? form.estado : 'ACTIVO',
         observaciones: form.observaciones || null,
       })
       setMsg({ type: 'success', text: 'Acuerdo actualizado correctamente' })
@@ -134,15 +166,15 @@ export default function AcuerdoPagoTable({ moduleColor }) {
   )
 
   const estadoBadge = (e) => ({
-    VIGENTE:    'bg-success',
-    CUMPLIDO:   'bg-primary',
+    ACTIVO:     'bg-success',
+    COMPLETADO: 'bg-primary',
     INCUMPLIDO: 'bg-danger',
     CANCELADO:  'bg-secondary',
   }[e] ?? 'bg-secondary')
 
   return (
     <div className="p-3">
-      {msg && (
+      {msg && !showModal && (
         <div className={`alert alert-${msg.type} alert-dismissible`}>
           {msg.text}
           <button className="btn-close" onClick={() => setMsg(null)} />
@@ -211,7 +243,7 @@ export default function AcuerdoPagoTable({ moduleColor }) {
       {/* Modal Crear/Editar */}
       {showModal && (
         <div className="modal fade show d-block" style={{ background: '#00000060' }}>
-          <div className="modal-dialog modal-md">
+          <div className="modal-dialog modal-md modal-dialog-scrollable modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header" style={{ borderBottom: `3px solid ${moduleColor}` }}>
                 <h6 className="modal-title fw-bold">
@@ -220,17 +252,22 @@ export default function AcuerdoPagoTable({ moduleColor }) {
                 <button className="btn-close" onClick={() => setShowModal(false)} />
               </div>
               <div className="modal-body row g-3">
+                {msg && (
+                  <div className={`col-12 alert alert-${msg.type} alert-dismissible py-2 mb-0`}>
+                    {msg.text}
+                    <button className="btn-close" onClick={() => setMsg(null)} />
+                  </div>
+                )}
                 {!editId && (
                   <div className="col-12">
                     <label className="form-label fw-semibold">Residente <span className="text-danger">*</span></label>
                     <select className="form-select form-select-sm"
                       value={form.idResidente}
-                      onChange={e => setForm(f => ({ ...f, idResidente: e.target.value }))}>
+                      onChange={e => setForm(f => ({ ...f, idResidente: e.target.value, idCuenta: '' }))}>
                       <option value="">Seleccionar residente...</option>
-                      {residentes.map(r => {
-                        const id = r.id_Residente ?? r.idResidente
-                        return <option key={id} value={id}>Residente #{id}</option>
-                      })}
+                      {residentes.map(r => (
+                        <option key={r.id} value={r.id}>{r.label}</option>
+                      ))}
                     </select>
                     </div>
                   )}
@@ -241,19 +278,32 @@ export default function AcuerdoPagoTable({ moduleColor }) {
                       <label className="form-label fw-semibold">
                         Cuenta por Cobrar <span className="text-danger">*</span>
                       </label>
-                      <select className="form-select form-select-sm"
+                      <select
+                        className="form-select form-select-sm"
                         value={form.idCuenta}
+                        disabled={!form.idResidente || loadingCuentas}
                         onChange={e => setForm(f => ({ ...f, idCuenta: e.target.value }))}>
-                        <option value="">Seleccionar cuenta...</option>
-                        {cuentas.map(c => {
+                        <option value="">
+                          {!form.idResidente
+                            ? 'Primero seleccione un residente...'
+                            : loadingCuentas
+                              ? 'Cargando cuentas...'
+                              : cuentasFiltradas.length === 0
+                                ? 'Sin cuentas pendientes'
+                                : 'Seleccionar cuenta...'}
+                        </option>
+                        {cuentasFiltradas.map(c => {
                           const id = c.idCuenta ?? c.id_Cuenta ?? c.id
                           return (
                             <option key={id} value={id}>
-                              Cuenta #{id}
+                              Cuenta #{id} — Q{Number(c.montoPendiente ?? c.montoOriginal ?? 0).toFixed(2)} ({c.estado ?? '—'})
                             </option>
                           )
                         })}
                       </select>
+                      {form.idResidente && !loadingCuentas && cuentasFiltradas.length === 0 && (
+                        <small className="text-muted">Este residente no tiene cuentas por cobrar pendientes.</small>
+                      )}
                     </div>
 
                     {/* Descripción */}
@@ -321,8 +371,8 @@ export default function AcuerdoPagoTable({ moduleColor }) {
                     <select className="form-select form-select-sm"
                       value={form.estado ?? 'VIGENTE'}
                       onChange={e => setForm(f => ({ ...f, estado: e.target.value }))}>
-                      <option value="VIGENTE">Vigente</option>
-                      <option value="CUMPLIDO">Cumplido</option>
+                      <option value="ACTIVO">Activo</option>
+                      <option value="COMPLETADO">Completado</option>
                       <option value="INCUMPLIDO">Incumplido</option>
                       <option value="CANCELADO">Cancelado</option>
                     </select>
@@ -337,7 +387,7 @@ export default function AcuerdoPagoTable({ moduleColor }) {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-sm btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
-                <button className="btn btn-sm text-white" style={{ background: moduleColor }}
+                <button className="btn btn-sm btn-primary" style={{ background: moduleColor, borderColor: moduleColor }}
                   onClick={guardar} disabled={saving}>
                   {saving ? <span className="spinner-border spinner-border-sm" /> : 'Guardar'}
                 </button>

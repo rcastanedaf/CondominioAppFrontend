@@ -41,14 +41,14 @@ export default function TipoServicioModal({ show, onClose, onSaved, tipoServicio
     setLoading(true); setError(null)
     try {
       const payload = {
-        id: tipoServicio ? tipoServicio.id : 0,
+        idTipoServicio: tipoServicio ? tipoServicio.idTipoServicio : 0,
         nombre, descripcion, idUnidadMedida: Number(idUnidadMedida) || null,
         periodicidad, montoBase: Number(montoBase) || null,
         aplicaIva: Number(aplicaIva), aplicaMora: Number(aplicaMora),
         porcentajeMora: Number(porcentajeMora) || null,
         diasGracia: Number(diasGracia) || null, cuentaContable, activo: Number(activo),
       }
-      tipoServicio ? await updateTipoServicio(tipoServicio.id, payload) : await createTipoServicio(payload)
+      tipoServicio ? await updateTipoServicio(payload) : await createTipoServicio(payload)
       onSaved()
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }

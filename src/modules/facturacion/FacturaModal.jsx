@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createFactura, updateFactura } from './facturacionService'
+import { createFactura, updateFactura, getNextCorrelative } from './facturacionService'
 import FkSelector from '../../components/FkSelector'
 import { getPropiedades } from '../catalogos/propiedadService'
 import { getResidentes } from '../residentes/residenteService'
@@ -10,7 +10,7 @@ import { getContratos } from '../contratos/contratoService'
 
 import { getTipoServicios } from './tipoServicioService'
 
-const ESTADOS = ['PENDIENTE', 'PAGADA', 'VENCIDA', 'ANULADA', 'EN_PROCESO']
+const ESTADOS = ['BORRADOR', 'PENDIENTE', 'PAGADA', 'PARCIALMENTE_PAGADA', 'ANULADA', 'EN_MORA', 'CASTIGADA']
 
 export default function FacturaModal({ show, onClose, onSaved, factura }) {
 
@@ -23,6 +23,9 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
   const [labelPropiedad,        setLabelProp]        = useState('')
   const [idResidente,           setIdRes]            = useState('')
   const [labelResidente,        setLabelRes]         = useState('')
+  const [personaId,             setPersonaId]        = useState('')
+  const [residentePropId,       setResidentePropId]  = useState(null)
+  const [allResidentes,         setAllResidentes]    = useState([])
   const [receptorNombre,        setRecNombre]        = useState('')
   const [receptorNit,           setRecNit]           = useState('')
   const [receptorDireccion,     setRecDir]           = useState('')
@@ -50,6 +53,32 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
   const [loading,               setLoading]          = useState(false)
   const [error,                 setError]            = useState(null)
 
+  // Carga todos los residentes enriquecidos una vez (fuente de verdad para persona→residente)
+  useEffect(() => {
+    Promise.all([getResidentes(), getPersonas()])
+      .then(([resRes, perRes]) => {
+        const res = resRes.data?.data ?? []
+        const per = perRes.data?.data ?? []
+        const perMap = new Map(per.map(p => [p.id_Persona, p]))
+        setAllResidentes(res
+          .filter(r => r.activo === 1 || r.Activo === 1)
+          .map(r => ({
+            ...r,
+            nombres:   perMap.get(r.id_Persona)?.nombres   ?? '',
+            apellidos: perMap.get(r.id_Persona)?.apellidos ?? '',
+          }))
+        )
+      })
+      .catch(() => {})
+  }, [])
+
+  // Al editar, resuelve el personaId desde el idResidente de la factura
+  useEffect(() => {
+    if (!show || !factura || !allResidentes.length || personaId) return
+    const found = allResidentes.find(r => r.id_Residente === Number(factura.idResidente))
+    if (found) setPersonaId(found.id_Persona)
+  }, [show, factura, allResidentes]) // eslint-disable-line
+
   useEffect(() => {
     if (!show) return
     if (factura) {
@@ -60,6 +89,7 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
       setNumSat(factura.numeroAutorizacionSat ?? '')
       setIdProp(factura.idPropiedad          ?? ''); setLabelProp('')
       setIdRes(factura.idResidente           ?? ''); setLabelRes('')
+      setResidentePropId(factura.idPropiedad ?? null)
       setRecNombre(factura.receptorNombre    ?? '')
       setRecNit(factura.receptorNit          ?? '')
       setRecDir(factura.receptorDireccion    ?? '')
@@ -82,8 +112,9 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
       setMotivo(factura.motivoAnulacion     ?? '')
       setObs(factura.observaciones          ?? '')
     } else {
-      setIdTipoDoc(''); setIdCorrel(''); setSerie(''); setNumFact('')
-      setNumSat(''); setIdProp(''); setLabelProp(''); setIdRes(''); setLabelRes('')
+      // Nueva factura: obtener el siguiente correlativo
+      setIdTipoDoc(''); setSerie(''); setNumFact('')
+      setNumSat(''); setIdProp(''); setLabelProp(''); setIdRes(''); setLabelRes(''); setPersonaId(''); setResidentePropId(null)
       setRecNombre(''); setRecNit(''); setRecDir('')
       setFechaEmis(''); setFechaVenc(''); setPeriodoIn(''); setPeriodoFin('')
       setIdMoneda(''); setLabelMoneda(''); setTipoCambio('')
@@ -91,16 +122,26 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
       setTotal(''); setTotalLetras(''); setSaldoPend(''); setEstado('PENDIENTE')
       setIdCiclo(''); setLabelCiclo(''); setIdContrato(''); setLabelContrato('')
       setMotivo(''); setObs('')
+      
+      // Obtener el siguiente correlativo automáticamente
+      getNextCorrelative()
+        .then(res => setIdCorrel(res.data?.nextCorrelative ?? ''))
+        .catch(() => setIdCorrel(''))
     }
     setError(null)
   }, [show]) // eslint-disable-line
 
-  const handleSubmit = async () => {
-    if (!receptorNombre.trim()) return setError('El nombre del receptor es requerido')
-    if (!receptorNit.trim())    return setError('El NIT del receptor es requerido')
-    if (!fechaEmision)          return setError('La fecha de emisión es requerida')
-    if (!fechaVencimiento)      return setError('La fecha de vencimiento es requerida')
+  const camposFaltantes = [
+    !personaId                                && 'Residente',
+    !idPropiedad                              && 'Propiedad',
+    !idCorrelativo                            && 'Correlativo',
+    !receptorNombre?.trim()                   && 'Nombre receptor',
+    !receptorNit?.trim()                      && 'NIT',
+    !fechaEmision                             && 'Fecha emisión',
+    !fechaVencimiento                         && 'Fecha vencimiento',
+  ].filter(Boolean)
 
+  const handleSubmit = async () => {
     setLoading(true); setError(null)
     try {
       const payload = {
@@ -120,6 +161,7 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
         totalDescuentos:       Number(totalDescuentos) || 0,
         baseImponible:         Number(baseImponible)   || 0,
         totalIva:              Number(totalIva)        || 0,
+        totalOtrosImpuestos:   0,
         total:                 Number(total)           || 0,
         totalEnLetras, saldoPendiente: Number(saldoPendiente) || 0,
         estado,
@@ -127,7 +169,6 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
         idContratoOrigen:      Number(idContratoOrigen) || null,
         motivoAnulacion, observaciones,
       }
-      console.log(payload);
       factura ? await updateFactura(payload) : await createFactura(payload)
       onSaved()
     } catch (err) {
@@ -203,43 +244,6 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
     }
   };
 
-  const getResidentesConPersona = async () => {
-    try {
-      const residentesResponse = await getResidentes();
-      const personasResponse = await getPersonas();
-
-      // EXTRAER ARREGLOS REALES
-      const residentes = residentesResponse.data.data;
-      const personas = personasResponse.data.data;
-
-      // MAPA DE PERSONAS
-      const personasMap = new Map(
-        personas.map(p => [p.id_Persona, p])
-      );
-
-      // COMBINAR
-      const resultado = residentes.map(r => {
-        const persona = personasMap.get(r.id_Persona);
-
-        return {
-          ...r,
-          nombres: persona?.nombres ?? '',
-          apellidos: persona?.apellidos ?? '',
-        };
-      });
-
-      return {
-        data: {
-          data: resultado
-        }
-      };
-
-    } catch (error) {
-      console.error(error);
-      return [];
-    }
-  };
-
   if (!show) return null
   return (
     <>
@@ -254,6 +258,12 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
               <button className="btn-close" onClick={onClose} />
             </div>
             <div className="modal-body">
+              {camposFaltantes.length > 0 && (
+                <div className="alert alert-danger py-2 mb-3 d-flex align-items-start gap-2">
+                  <i className="bi bi-exclamation-circle-fill mt-1" style={{ flexShrink: 0 }} />
+                  <div><strong>Campos requeridos:</strong> {camposFaltantes.join(', ')}</div>
+                </div>
+              )}
               {error && (
                 <div className="alert alert-danger py-2 mb-3">
                   <i className="bi bi-exclamation-circle me-2" />{error}
@@ -297,51 +307,88 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
                 <i className="bi bi-person me-1" />DATOS DEL RECEPTOR
               </p>
               <div className="row g-3 mb-4">
-                {/* ✅ FK Propiedad */}
+                {/* ✅ FK Residente — personas únicas que son residentes activos */}
                 <div className="col-md-4">
                   <FkSelector
-                    label="Propiedad"
-                    fetchFn={getPropiedades}
-                    getId={p => p.idPropiedad ?? p.id}
-                    getLabel={p => p.nombre ?? p.codigo ?? p.descripcion ?? `#${p.idPropiedad ?? p.id}`}
-                    value={idPropiedad}
-                    displayValue={labelPropiedad}
-                    onChange={(id, lbl) => { setIdProp(id); setLabelProp(lbl) }}
-                    placeholder="Selecciona propiedad..."
-                  />
-                </div>
-                {/* ✅ FK Residente */}
-                <div className="col-md-4">
-                  <FkSelector
+                    key={`res-${allResidentes.length}`}
                     label="Residente"
-                    fetchFn={getResidentesConPersona}
-                    getId={r => r.id_Residente ?? r.id}
-                    getLabel={r =>
-                      r.nombres
-                        ? `${r.nombres} ${r.apellidos ?? ''}`.trim()
-                        : `#${r.id_Residente ?? r.id}`
-                    }
-                    value={idResidente}
+                    required
+                    invalid={!personaId}
+                    fetchFn={() => {
+                      const seen = new Set()
+                      const unique = allResidentes.filter(r => {
+                        if (seen.has(r.id_Persona)) return false
+                        seen.add(r.id_Persona)
+                        return true
+                      })
+                      return Promise.resolve({ data: unique })
+                    }}
+                    getId={r => r.id_Persona}
+                    getLabel={r => `${r.nombres} ${r.apellidos ?? ''}`.trim() || `Persona #${r.id_Persona}`}
+                    value={personaId}
                     displayValue={labelResidente}
                     onChange={(id, lbl) => {
-                      setIdRes(id);
-                      setLabelRes(lbl);
+                      setPersonaId(id)
+                      setLabelRes(lbl)
+                      setIdRes('')
+                      setResidentePropId(null)
+                      setIdProp(''); setLabelProp('')
+                      setIdContrato(''); setLabelContrato('')
                     }}
                     placeholder="Selecciona residente..."
+                  />
+                </div>
+                {/* ✅ FK Propiedad — solo las propiedades del residente seleccionado */}
+                <div className="col-md-4">
+                  <FkSelector
+                    key={`prop-${personaId ?? 'all'}`}
+                    label="Propiedad"
+                    required
+                    invalid={!idPropiedad}
+                    disabled={!personaId}
+                    fetchFn={() =>
+                      getPropiedades().then(res => {
+                        const all = res.data?.data ?? res.data ?? []
+                        const propIds = allResidentes
+                          .filter(r => r.id_Persona === Number(personaId))
+                          .map(r => r.id_Propiedad)
+                        return { data: all.filter(p => propIds.includes(p.id_propiedad ?? p.idPropiedad)) }
+                      })
+                    }
+                    getId={p => p.id_propiedad ?? p.idPropiedad ?? p.id}
+                    getLabel={p => p.codigo ?? p.nombre ?? p.descripcion ?? `#${p.id_propiedad ?? p.idPropiedad ?? p.id}`}
+                    value={idPropiedad}
+                    displayValue={labelPropiedad}
+                    onChange={(id, lbl) => {
+                      setIdProp(id)
+                      setLabelProp(lbl)
+                      setResidentePropId(id)
+                      const res = allResidentes.find(r =>
+                        r.id_Persona === Number(personaId) &&
+                        r.id_Propiedad === Number(id)
+                      )
+                      setIdRes(res?.id_Residente ?? '')
+                      setIdContrato(''); setLabelContrato('')
+                    }}
+                    placeholder="Selecciona propiedad..."
                   />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                     Nombre Receptor <span className="text-danger">*</span>
                   </label>
-                  <input className="form-control form-control-sm" placeholder="Nombre completo"
+                  <input
+                    className={`form-control form-control-sm${!receptorNombre?.trim() ? ' is-invalid' : ''}`}
+                    placeholder="Nombre completo"
                     value={receptorNombre} onChange={e => setRecNombre(e.target.value)} />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                     NIT <span className="text-danger">*</span>
                   </label>
-                  <input className="form-control form-control-sm" placeholder="CF o NIT"
+                  <input
+                    className={`form-control form-control-sm${!receptorNit?.trim() ? ' is-invalid' : ''}`}
+                    placeholder="CF o NIT"
                     value={receptorNit} onChange={e => setRecNit(e.target.value)} />
                 </div>
                 <div className="col-md-8">
@@ -360,14 +407,16 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
                   <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                     Fecha Emisión <span className="text-danger">*</span>
                   </label>
-                  <input type="date" className="form-control form-control-sm"
+                  <input type="date"
+                    className={`form-control form-control-sm${!fechaEmision ? ' is-invalid' : ''}`}
                     value={fechaEmision} onChange={e => setFechaEmis(e.target.value)} />
                 </div>
                 <div className="col-md-3">
                   <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                     Fecha Vencimiento <span className="text-danger">*</span>
                   </label>
-                  <input type="date" className="form-control form-control-sm"
+                  <input type="date"
+                    className={`form-control form-control-sm${!fechaVencimiento ? ' is-invalid' : ''}`}
                     value={fechaVencimiento} onChange={e => setFechaVenc(e.target.value)} />
                 </div>
                 <div className="col-md-3">
@@ -495,10 +544,24 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
                 {/* ✅ FK Contrato */}
                 <div className="col-md-3">
                   <FkSelector
+                    key={`contrato-${idResidente}-${idPropiedad}`}
                     label="Contrato Origen"
-                    fetchFn={getContratos}
-                    getId={c => c.id_contrato ?? c.id}
-                    getLabel={c => c.numeroContrato ?? `Contrato #${c.tipo_contrato ?? c.id}`}
+                    disabled={!idResidente || !idPropiedad}
+                    fetchFn={() =>
+                      getContratos().then(res => {
+                        const all = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+                        return {
+                          data: all.filter(c =>
+                            c.id_propiedad === Number(idPropiedad) &&
+                            c.id_residente === Number(idResidente)
+                          )
+                        }
+                      })
+                    }
+                    getId={c => c.id_contrato}
+                    getLabel={c =>
+                      `${c.tipo_contrato ?? 'Contrato'} — ${c.fecha_inicio?.substring(0, 10) ?? ''} / ${c.fecha_fin?.substring(0, 10) ?? ''}`
+                    }
                     value={idContratoOrigen}
                     displayValue={labelContrato}
                     onChange={(id, lbl) => { setIdContrato(id); setLabelContrato(lbl) }}
@@ -521,7 +584,7 @@ export default function FacturaModal({ show, onClose, onSaved, factura }) {
               <button className="btn btn-outline-secondary" onClick={onClose} disabled={loading}>
                 Cancelar
               </button>
-              <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+              <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || camposFaltantes.length > 0}>
                 {loading
                   ? <><span className="spinner-border spinner-border-sm me-2" />Guardando...</>
                   : factura ? 'Guardar cambios' : 'Crear Factura'}

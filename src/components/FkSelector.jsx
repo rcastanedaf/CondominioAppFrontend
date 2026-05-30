@@ -1,58 +1,71 @@
 import { useState, useEffect, useRef } from 'react'
 
-/**
- * FkSelector — campo FK con botón que abre dropdown de selección
- *
- * Props:
- *   label       — etiqueta del campo
- *   required    — muestra asterisco rojo
- *   fetchFn     — función async que devuelve la lista (res.data o res.data.data)
- *   getId       — fn(item) => id
- *   getLabel    — fn(item) => texto visible
- *   value       — id seleccionado actualmente
- *   displayValue — texto visible actualmente
- *   onChange    — fn(id, label) => void
- *   placeholder — placeholder del input
- *   size        — 'sm' | '' (default '')
- */
 export default function FkSelector({
   label, required, fetchFn, getId, getLabel,
   value, displayValue, onChange,
-  placeholder = 'Selecciona...', size = 'sm'
+  placeholder = 'Selecciona...', size = 'sm', invalid = false, disabled = false
 }) {
   const [open,    setOpen]    = useState(false)
   const [items,   setItems]   = useState([])
   const [loading, setLoading] = useState(false)
   const [filter,  setFilter]  = useState('')
-  const ref = useRef(null)
+  const ref       = useRef(null)
+  const loadedRef = useRef(false)
 
-  // Cerrar al hacer clic fuera
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  // Carga en background cuando hay value sin displayValue para resolver el nombre
+  useEffect(() => {
+    if (value && !displayValue && items.length === 0 && !loadedRef.current) {
+      loadedRef.current = true
+      setLoading(true)
+      fetchFn()
+        .then(res => {
+          const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? res.data?.Data ?? []
+          setItems(lista)
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false))
+    }
+  }, [value, displayValue]) // eslint-disable-line
+
   const handleOpen = async () => {
+    if (disabled) return
     if (!open && items.length === 0) {
+      loadedRef.current = true
       setLoading(true)
       try {
         const res = await fetchFn()
-        const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? []
-        console.log('primer item:', lista[0])
+        const lista = Array.isArray(res.data) ? res.data : res.data?.data ?? res.data?.Data ?? []
         setItems(lista)
-      } catch { setItems([]) }
-      finally { setLoading(false) }
+      } catch (e) {
+        setItems([])
+      } finally {
+        setLoading(false)
+      }
     }
     setOpen(o => !o)
     setFilter('')
   }
 
   const handleSelect = (item) => {
-    onChange(getId(item), getLabel(item))
+    onChange(getId(item), getLabel(item), item)
     setOpen(false)
     setFilter('')
   }
+
+  // Texto visible: label explícito → buscar nombre en items → fallback #ID
+  const resolvedLabel = displayValue
+    || (value && items.length > 0
+      ? (() => {
+          const found = items.find(i => String(getId(i)) === String(value))
+          return found ? getLabel(found) : `#${value}`
+        })()
+      : value ? `#${value}` : '')
 
   const filtered = items.filter(i =>
     getLabel(i).toLowerCase().includes(filter.toLowerCase()) ||
@@ -72,13 +85,13 @@ export default function FkSelector({
       <div className="input-group" style={{ flexWrap: 'nowrap' }}>
         <input
           readOnly
-          className={`form-control ${inputSize}`}
-          style={{ cursor: 'pointer', backgroundColor: '#fff' }}
-          value={displayValue || (value ? `#${value}` : '')}
-          placeholder={placeholder}
+          className={`form-control ${inputSize}${invalid ? ' is-invalid' : ''}${disabled ? ' bg-light' : ''}`}
+          style={{ cursor: disabled ? 'not-allowed' : 'pointer', backgroundColor: disabled ? '#f8f9fa' : '#fff' }}
+          value={disabled ? '' : resolvedLabel}
+          placeholder={disabled ? 'Selecciona un residente primero' : placeholder}
           onClick={handleOpen}
         />
-        {value && (
+        {value && !disabled && (
           <button
             type="button"
             className={`btn btn-outline-secondary ${btnSize}`}
@@ -92,6 +105,7 @@ export default function FkSelector({
           type="button"
           className={`btn btn-outline-primary ${btnSize}`}
           onClick={handleOpen}
+          disabled={disabled}
           title="Seleccionar"
         >
           <i className={`bi ${loading ? 'bi-arrow-repeat' : 'bi-search'}`} />
@@ -101,18 +115,14 @@ export default function FkSelector({
         {value ? `ID: ${value}` : 'Ninguno seleccionado'}
       </div>
 
-      {/* Dropdown */}
       {open && (
-        <div
-          style={{
-            position: 'absolute', top: '100%', left: 0, right: 0,
-            zIndex: 1060, background: '#fff',
-            border: '1px solid #dee2e6', borderRadius: 6,
-            boxShadow: '0 4px 16px rgba(0,0,0,.12)',
-            maxHeight: 280, display: 'flex', flexDirection: 'column'
-          }}
-        >
-          {/* Buscador dentro del dropdown */}
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0,
+          zIndex: 1060, background: '#fff',
+          border: '1px solid #dee2e6', borderRadius: 6,
+          boxShadow: '0 4px 16px rgba(0,0,0,.12)',
+          maxHeight: 280, display: 'flex', flexDirection: 'column'
+        }}>
           <div className="p-2 border-bottom">
             <input
               autoFocus
@@ -137,11 +147,11 @@ export default function FkSelector({
                 onClick={() => handleSelect(item)}
                 style={{
                   padding: '7px 12px', cursor: 'pointer', fontSize: 13,
-                  background: getId(item) === value ? '#e8f0fe' : undefined,
+                  background: String(getId(item)) === String(value) ? '#e8f0fe' : undefined,
                   borderBottom: '1px solid #f0f0f0'
                 }}
                 onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-                onMouseLeave={e => e.currentTarget.style.background = getId(item) === value ? '#e8f0fe' : '#fff'}
+                onMouseLeave={e => e.currentTarget.style.background = String(getId(item)) === String(value) ? '#e8f0fe' : '#fff'}
               >
                 <span className="text-muted me-2" style={{ fontSize: 11 }}>#{getId(item)}</span>
                 {getLabel(item)}

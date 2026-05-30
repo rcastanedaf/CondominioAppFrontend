@@ -39,14 +39,17 @@ export default function CobroMoraModal({ show, onClose, onSaved, cobro }) {
     setLoading(true); setError(null)
     try {
       const payload = {
-        id: cobro ? cobro.id : 0,
-        idCuenta: Number(idCuenta), fechaCalculo,
-        diasAtraso: Number(diasAtraso), saldoBase: Number(saldoBase),
-        porcentajeAplicado: Number(porcentajeAplicado) || 0,
-        montoMora: Number(montoMora) || 0, acumuladoTotal: Number(acumuladoTotal) || 0,
-        observaciones,
+        IdMora:              cobro ? (cobro.idMora ?? 0) : 0,
+        IdCuenta:            Number(idCuenta),
+        FechaCalculo:        fechaCalculo,
+        DiasAtraso:          Number(diasAtraso),
+        SaldoBase:           Number(saldoBase),
+        PorcentajeAplicado:  Number(porcentajeAplicado) || null,
+        MontoMora:           Number(montoMora)          || null,
+        AcumuladoTotal:      Number(acumuladoTotal)     || null,
+        Observaciones:       observaciones              || null,
       }
-      cobro ? await updateCobroMora(cobro.id, payload) : await createCobroMora(payload)
+      cobro ? await updateCobroMora(payload) : await createCobroMora(payload)
       onSaved()
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }

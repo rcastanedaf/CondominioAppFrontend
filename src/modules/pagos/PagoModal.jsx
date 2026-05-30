@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPago, updatePago } from './pagoService'
 import FkSelector from '../../components/FkSelector'
-import { getFacturas } from '../facturacion/facturacionService'
+import { getFacturasByPropiedad } from '../facturacion/facturacionService'
 import { getTipoMonedas } from '../catalogos/tipoMonedaService'
 import { getMetodosPago } from '../catalogos/metodoPagoService'
 import { getBancos } from '../catalogos/bancoService'
@@ -9,7 +9,7 @@ import { getPersonas } from '../residentes/personaService'
 
 const ESTADOS = ['PENDIENTE', 'CONFIRMADO', 'RECHAZADO', 'REVERTIDO']
 
-export default function PagoModal({ show, onClose, onSaved, pago, facturaInicial }) {
+export default function PagoModal({ show, onClose, onSaved, pago, facturaInicial, residente }) {
   const [idFactura,        setIdFactura]        = useState('')
   const [labelFactura,     setLabelFactura]      = useState('')
   const [numeroRecibo,     setNumRecibo]         = useState('')
@@ -85,13 +85,16 @@ export default function PagoModal({ show, onClose, onSaved, pago, facturaInicial
     setError(null)
   }, [show]) // eslint-disable-line
 
-  const handleSubmit = async () => {
-    if (!idFactura)      return setError('Factura es requerida')
-    if (!fechaPago)      return setError('Fecha de pago es requerida')
-    if (!fechaValor)     return setError('Fecha valor es requerida')
-    if (!montoPagado)    return setError('El monto es requerido')
-    if (!registradoPor)  return setError('Registrado por es requerido')
+  const camposFaltantes = [
+    !idFactura      && 'Factura',
+    !numeroRecibo   && 'Número de recibo',
+    !fechaPago      && 'Fecha de pago',
+    !fechaValor     && 'Fecha valor',
+    !montoPagado    && 'Monto pagado',
+    !registradoPor  && 'Registrado por',
+  ].filter(Boolean)
 
+  const handleSubmit = async () => {
     setLoading(true); setError(null)
     try {
       const payload = {
@@ -134,6 +137,15 @@ export default function PagoModal({ show, onClose, onSaved, pago, facturaInicial
               <button className="btn-close" onClick={onClose} />
             </div>
             <div className="modal-body">
+              {camposFaltantes.length > 0 && (
+                <div className="alert alert-danger py-2 mb-3 d-flex align-items-start gap-2">
+                  <i className="bi bi-exclamation-circle-fill mt-1" style={{ flexShrink: 0 }} />
+                  <div>
+                    <strong>Campos requeridos:</strong>{' '}
+                    {camposFaltantes.join(', ')}
+                  </div>
+                </div>
+              )}
               {error && (
                 <div className="alert alert-danger py-2 mb-3">
                   <i className="bi bi-exclamation-circle me-2" />{error}
@@ -145,36 +157,59 @@ export default function PagoModal({ show, onClose, onSaved, pago, facturaInicial
                 <div className="col-md-8">
                   <FkSelector
                     label="Factura" required
-                    fetchFn={getFacturas}
+                    invalid={!idFactura}
+                    fetchFn={() =>
+                      getFacturasByPropiedad(residente?.id_Propiedad).then(res => {
+                        const all = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+                        return { data: all.filter(f => f.idResidente === residente?.id) }
+                      })
+                    }
                     getId={f => f.idFactura}
                     getLabel={f => f.serie
                       ? `${f.serie}-${f.numeroFactura} — ${f.receptorNombre ?? ''}`
                       : `#${f.idFactura} — ${f.receptorNombre ?? ''}`}
                     value={idFactura}
                     displayValue={labelFactura}
-                    onChange={(id, lbl) => { setIdFactura(id); setLabelFactura(lbl) }}
+                    onChange={(id, lbl, f) => {
+                      setIdFactura(id)
+                      setLabelFactura(lbl)
+                      if (f) {
+                        setIdMoneda(f.idMoneda ?? '')
+                        setTipoCambio(f.tipoCambio ?? '')
+                        const monto = f.saldoPendiente ?? f.total ?? ''
+                        setMonto(monto)
+                        setMontoGtq(
+                          monto && f.tipoCambio
+                            ? (Number(monto) * Number(f.tipoCambio)).toFixed(2)
+                            : monto ?? ''
+                        )
+                      }
+                    }}
                     placeholder="Selecciona una factura..."
                   />
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold" style={{ fontSize: 13 }}>Número Recibo</label>
-                  <input className="form-control form-control-sm" value={numeroRecibo}
-                    onChange={e => setNumRecibo(e.target.value)} />
+                  <label className="form-label fw-semibold" style={{ fontSize: 13 }}>Número Recibo <span className="text-danger">*</span></label>
+                  <input
+                    className={`form-control form-control-sm${!numeroRecibo ? ' is-invalid' : ''}`}
+                    value={numeroRecibo} onChange={e => setNumRecibo(e.target.value)} />
                 </div>
 
                 <div className="col-md-4">
                   <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                     Fecha Pago <span className="text-danger">*</span>
                   </label>
-                  <input type="date" className="form-control form-control-sm"
+                  <input type="date"
+                    className={`form-control form-control-sm${!fechaPago ? ' is-invalid' : ''}`}
                     value={fechaPago} onChange={e => setFechaPago(e.target.value)} />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                     Fecha Valor <span className="text-danger">*</span>
                   </label>
-                  <input type="date" className="form-control form-control-sm"
+                  <input type="date"
+                    className={`form-control form-control-sm${!fechaValor ? ' is-invalid' : ''}`}
                     value={fechaValor} onChange={e => setFechaValor(e.target.value)} />
                 </div>
                 <div className="col-md-4">
@@ -183,7 +218,8 @@ export default function PagoModal({ show, onClose, onSaved, pago, facturaInicial
                   </label>
                   <div className="input-group input-group-sm">
                     <span className="input-group-text">Q</span>
-                    <input type="number" step="0.01" className="form-control"
+                    <input type="number" step="0.01"
+                      className={`form-control${!montoPagado ? ' is-invalid' : ''}`}
                       value={montoPagado} onChange={e => setMonto(e.target.value)} />
                   </div>
                 </div>
@@ -271,6 +307,7 @@ export default function PagoModal({ show, onClose, onSaved, pago, facturaInicial
                 <div className="col-md-6">
                   <FkSelector
                     label="Registrado Por" required
+                    invalid={!registradoPor}
                     fetchFn={getPersonas}
                     getId={p => p.id_Persona ?? p.Id_Persona ?? p.idPersona ?? p.id}
                     getLabel={p => p.nombres
@@ -306,7 +343,7 @@ export default function PagoModal({ show, onClose, onSaved, pago, facturaInicial
               <button className="btn btn-outline-secondary" onClick={onClose} disabled={loading}>
                 Cancelar
               </button>
-              <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+              <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || camposFaltantes.length > 0}>
                 {loading
                   ? <><span className="spinner-border spinner-border-sm me-2" />Guardando...</>
                   : pago ? 'Guardar cambios' : 'Crear Pago'}
