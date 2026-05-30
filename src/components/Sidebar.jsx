@@ -165,7 +165,7 @@ export default function Sidebar({ collapsed, onToggle }) {
         <aside
             style={{
                 width:          collapsed ? 64 : 260,
-                height:         '100vh',          // ← era minHeight: '100vh'
+                height:         '100%',
                 background:     'linear-gradient(180deg, #0f2044 0%, #1a3560 100%)',
                 transition:     'width 0.25s ease',
                 overflowX:      'hidden',

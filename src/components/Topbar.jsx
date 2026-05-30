@@ -59,14 +59,6 @@ export default function Topbar({ collapsed, onToggle, usuario }) {
             {/* Acciones rápidas */}
             <div className="d-flex align-items-center gap-2">
 
-                {/* Notificaciones (placeholder) */}
-                <button className="btn btn-sm btn-light position-relative" style={{ borderRadius: 8 }}>
-                    <i className="bi bi-bell"></i>
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: 9 }}>
-                        3
-                    </span>
-                </button>
-
                 {/* Usuario */}
                 <div className="dropdown">
                     <button
