@@ -19,20 +19,49 @@ export default function EspacioComunTable({ moduleColor }) {
     paginaSegura, totalPaginas, porPagina, setPorPagina, irA, paginas,
   } = usePaginacion(rows)
 
-  const fetchData = () => {
-    setLoading(true)
-    getEspacios()
-      .then(res => setRows(res.data?.data ?? []))
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
-  }
+const fetchData = () => {
+  setLoading(true)
+
+getEspacios()
+  .then(res => {
+    console.log("RESPUESTA COMPLETA:", res);
+    console.log("DATA:", res.data);
+    console.log("DATA.DATA:", res.data?.data);
+
+    setRows(res.data?.data ?? []);
+  })
+    .catch(err => {
+      console.error("ERROR FETCHDATA:", err)
+      setError(err.message)
+    })
+    .finally(() => setLoading(false))
+}
 
   useEffect(() => { fetchData() }, [])
 
-  const handleEliminar = async (id) => {
-    try { await deleteEspacio(id); setConfirmId(null); fetchData() }
-    catch (err) { alert('Error al eliminar: ' + err.message) }
+ const handleEliminar = async (id) => {
+  console.log("ENTRO A HANDLEELIMINAR");
+  console.log("ID RECIBIDO:", id);
+
+  try {
+    const resp = await deleteEspacio(id);
+
+    console.log("DELETE RESPUESTA:", resp);
+
+    setConfirmId(null);
+    fetchData();
+
+  } catch (err) {
+
+    console.error("ERROR DELETE:", err);
+
+    if (err.response) {
+      console.log("BACKEND DELETE:", err.response.data);
+    }
+
+    alert('Error al eliminar: ' + err.message);
   }
+}
 
   if (loading) return <div className="text-center py-5 text-muted"><div className="spinner-border spinner-border-sm me-2" />Cargando espacios...</div>
   if (error)   return <div className="alert alert-danger py-2"><i className="bi bi-exclamation-circle me-2" />{error}</div>
@@ -41,7 +70,11 @@ export default function EspacioComunTable({ moduleColor }) {
     <>
       <PaginacionFooter
         titulo="Catálogo de Espacios Comunes" icono="bi-building" labelBoton="Nuevo Espacio"
-        onNuevo={() => { setSelected(null); setShowModal(true) }} moduleColor={moduleColor}
+        onNuevo={() => {
+  console.log("BOTON NUEVO ESPACIO");
+  setSelected(null);
+  setShowModal(true);
+}} moduleColor={moduleColor}
         filtro={filtro} setFiltro={setFiltro} placeholder="Filtrar por nombre..."
         paginaSegura={paginaSegura} totalPaginas={totalPaginas}
         porPagina={porPagina} setPorPagina={setPorPagina} irA={irA} paginas={paginas}
@@ -84,8 +117,19 @@ export default function EspacioComunTable({ moduleColor }) {
                     </button>
                     {confirmId === r.id ? (
                       <>
-                        <span className="text-danger small align-self-center">¿Confirmar?</span>
-                        <button className="btn btn-sm btn-danger py-0 px-2" onClick={() => handleEliminar(r.id)}>Sí</button>
+                    <span className="text-danger small align-self-center">
+                      ¿Confirmar?
+                    </span>
+
+                    <button
+                      className="btn btn-sm btn-danger py-0 px-2"
+                      onClick={() => {
+                        console.log("ID A ELIMINAR:", r.id_Espacio);
+                        handleEliminar(r.id_Espacio);
+                      }}
+                    >
+                      Sí
+                    </button>
                         <button className="btn btn-sm btn-outline-secondary py-0 px-2" onClick={() => setConfirmId(null)}>No</button>
                       </>
                     ) : (
@@ -105,6 +149,8 @@ export default function EspacioComunTable({ moduleColor }) {
         porPagina={porPagina} setPorPagina={setPorPagina} irA={irA} paginas={paginas}
         totalDatos={datosFiltrados.length} label="espacios" moduleColor={moduleColor}
       />
+
+      {console.log("showModal =", showModal)}
       {showModal && (
         <EspacioModal
           espacio={selected}
@@ -132,33 +178,80 @@ function EspacioModal({ espacio, onClose, onSaved }) {
   const [loading,         setLoading]      = useState(false)
   const [error,           setError]        = useState(null)
 
-  const handleSubmit = async () => {
-    if (!nombre.trim())  { setError('El nombre es requerido'); return }
-    if (!capacidadMax)   { setError('La capacidad es requerida'); return }
-    setLoading(true); setError(null)
-    try {
-      const payload = {
-        Nombre:            nombre,
-        Descripcion:       descripcion  || null,
-        Capacidad_Max:     Number(capacidadMax),
-        Requiere_Reserva:  Number(requiereReserva),
-        Tiene_Costo:       Number(tieneCosto),
-        Costo_Por_Hora:    Number(costoPorHora)    || 0,
-        Costo_Por_Dia:     Number(costoPorDia)     || 0,
-        Deposito_Garantia: Number(depositoGarantia)|| 0,
-        Horario_Apertura:  horarioApertura || null,
-        Horario_Cierre:    horarioCierre   || null,
-        Reglas:            reglas          || null,
-        Estado:            estado,
-        Activo:            1,
-      }
-      espacio
-        ? await updateEspacio(espacio.id, { ...payload, Id: espacio.id })
-        : await createEspacio(payload)
-      onSaved()
-    } catch (e) { setError(e.response?.data?.message || e.message) }
-    finally { setLoading(false) }
+const handleSubmit = async () => {
+    console.log("ENTRO A HANDLESUBMIT");
+  if (!nombre.trim()) {
+    setError('El nombre es requerido')
+    return
   }
+
+  if (!capacidadMax) {
+    setError('La capacidad es requerida')
+    return
+  }
+
+  setLoading(true)
+  setError(null)
+
+try {
+  console.log("ANTES DE CREAR PAYLOAD");
+
+const payload = {
+  Nombre: nombre,
+  Descripcion: descripcion,
+
+  Capacidad_Max: Number(capacidadMax),
+
+  Requiere_Reserva: Number(requiereReserva),
+  Tiene_Costo: Number(tieneCosto),
+
+  Costo_Por_Hora: Number(costoPorHora) || 0,
+  Costo_Por_Dia: Number(costoPorDia) || 0,
+  Deposito_Garantia: Number(depositoGarantia) || 0,
+
+  Horario_Apertura: horarioApertura || null,
+  Horario_Cierre: horarioCierre || null,
+
+  Reglas: reglas || null,
+
+  Estado: estado,
+  Activo: 1
+};
+console.log("Payload enviado:", payload);
+
+  console.log("PAYLOAD CREADO");
+  console.log("Payload enviado:", payload);
+
+  console.log("ESPACIO:", espacio);
+if (espacio) {
+  await updateEspacio(
+    espacio.id_Espacio,
+    {
+      ...payload,
+      Id_Espacio: espacio.id_Espacio
+    }
+  );
+}else {
+    await createEspacio(payload);
+  }
+
+  onSaved();
+
+} catch (e) {
+
+  console.error("ERROR:", e);
+
+  if (e.response) {
+    console.log("BACKEND:", e.response.data);
+    setError(JSON.stringify(e.response.data, null, 2));
+  } else {
+    setError(e.message);
+  }
+
+} finally {
+  setLoading(false);
+}
+};
 
   return (
     <>
